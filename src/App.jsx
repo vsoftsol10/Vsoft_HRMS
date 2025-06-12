@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import './App.css'
 import { Route, Routes } from 'react-router-dom'
-import LoginPage from './pages/auth/LoginPage'
-import Dashboard from './pages/dashboard/dashboard'
+// import PayslipGenerator from './components/payroll/PaySlipGenerator'
+import PayrollPage from './pages/PayrollPage'
+import InternDashboardPage from './pages/InternDashboardPage'
+
 
 
 function App() {
 
   return (
     <Routes>
-        <Route path='/' element={<LoginPage/>} />
-        <Route path='/dashboard' element={<Dashboard/>} />
+      <Route path='/payslip/:id' element={<PayrollPage/>} />
+      <Route path='/intern/dashboard' element={<InternDashboardPage/>} />
     </Routes>
   )
 }
