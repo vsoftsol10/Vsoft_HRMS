@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Download, Printer, Mail, Calendar, User, Building, DollarSign } from 'lucide-react';
 import './PayslipGenerator.css';
 import payrollService from '../../services/PayrollServies';
+import logo from "../../assets/logo1.png"
 
 const PayslipGenerator = ({ payrollId, onClose }) => {
   const [payroll, setPayroll] = useState(null);
@@ -30,7 +31,6 @@ const PayslipGenerator = ({ payrollId, onClose }) => {
     fetchPayroll();
   }
 }, [payrollId]);
-
 
   const handlePrint = () => {
     window.print();
@@ -61,6 +61,13 @@ const PayslipGenerator = ({ payrollId, onClose }) => {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
+    });
+  };
+
+  const getMonthYear = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long'
     });
   };
 
@@ -97,14 +104,11 @@ const PayslipGenerator = ({ payrollId, onClose }) => {
   if (!payroll) return null;
 
   const totalEarnings = payroll.salary.basicSalary + 
-                       payroll.salary.overtime + 
-                       payroll.salary.bonus + 
                        payroll.salary.allowances;
 
-  const totalDeductions = payroll.deductions.tax + 
-                         payroll.deductions.insurance + 
-                         payroll.deductions.retirement + 
-                         payroll.deductions.other;
+  const totalDeductions = payroll.deductions.LeaveDeduction + 
+                         payroll.deductions.LOP_Deduction + 
+                         payroll.deductions.Late_Deduction ;
 
   return (
     <div className="payslip-overlay">
@@ -134,115 +138,94 @@ const PayslipGenerator = ({ payrollId, onClose }) => {
         {/* Payslip Content */}
         <div className="payslip-content">
           {/* Company Header */}
-          <div className="company-header">
-            <div className="company-title">
-              <Building className="company-icon" />
-              <h1 className="company-name">{payroll.company.name}</h1>
-            </div>
-            <p className="company-address">{payroll.company.address}</p>
-            <p className="company-contact">{payroll.company.phone} • {payroll.company.email}</p>
-            <h2 className="payroll-statement-title">PAYROLL STATEMENT</h2>
-          </div>
-
-          {/* Employee and Pay Period Info */}
-          <div className="info-grid">
-            <div className="info-section">
-              <h3 className="section-title">
-                <User className="section-icon" />
-                Employee Information
-              </h3>
-              <div className="info-details">
-                <p><span className="label">Name:</span> {payroll.employee.name}</p>
-                <p><span className="label">Employee ID:</span> {payroll.employee.employeeId}</p>
-                <p><span className="label">Position:</span> {payroll.employee.position}</p>
-                <p><span className="label">Department:</span> {payroll.employee.department}</p>
-                <p><span className="label">Email:</span> {payroll.employee.email}</p>
+          <div className="company-header-new">
+            <div className="company-logo-section">
+              <div className="company-logo">
+                <img src={logo} alt="Company Logo" className="logo-image" />
               </div>
             </div>
-            <div className="info-section">
-              <h3 className="section-title">
-                <Calendar className="section-icon" />
-                Pay Period Information
-              </h3>
-              <div className="info-details">
-                <p><span className="label">Pay Period:</span> {formatDate(payroll.payPeriod.start)} - {formatDate(payroll.payPeriod.end)}</p>
-                <p><span className="label">Pay Date:</span> {formatDate(payroll.payPeriod.payDate)}</p>
-              </div>
+            <div className="company-info">
+              <div className="company-address">{payroll.company.address}</div>
+              <div className="company-contact">{payroll.company.email}</div>
             </div>
           </div>
 
-          {/* Earnings and Deductions */}
-          <div className="earnings-deductions-grid">
-            {/* Earnings */}
-            <div className="earnings-section">
-              <h3 className="earnings-title">
-                <DollarSign className="section-icon" />
-                Earnings
-              </h3>
-              <div className="earnings-details">
-                <div className="earnings-row">
-                  <span>Basic Salary</span>
-                  <span className="amount">{formatCurrency(payroll.salary.basicSalary)}</span>
-                </div>
-                <div className="earnings-row">
-                  <span>Overtime</span>
-                  <span className="amount">{formatCurrency(payroll.salary.overtime)}</span>
-                </div>
-                <div className="earnings-row">
-                  <span>Bonus</span>
-                  <span className="amount">{formatCurrency(payroll.salary.bonus)}</span>
-                </div>
-                <div className="earnings-row">
-                  <span>Allowances</span>
-                  <span className="amount">{formatCurrency(payroll.salary.allowances)}</span>
-                </div>
-                <div className="earnings-total">
-                  <span>Total Earnings</span>
-                  <span className="total-amount">{formatCurrency(totalEarnings)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Deductions */}
-            <div className="deductions-section">
-              <h3 className="deductions-title">
-                <DollarSign className="section-icon" />
-                Deductions
-              </h3>
-              <div className="deductions-details">
-                <div className="deductions-row">
-                  <span>Income Tax (TDS)</span>
-                  <span className="amount">{formatCurrency(payroll.deductions.tax)}</span>
-                </div>
-                <div className="deductions-row">
-                  <span>Health Insurance</span>
-                  <span className="amount">{formatCurrency(payroll.deductions.insurance)}</span>
-                </div>
-                <div className="deductions-row">
-                  <span>Provident Fund (PF)</span>
-                  <span className="amount">{formatCurrency(payroll.deductions.retirement)}</span>
-                </div>
-                <div className="deductions-row">
-                  <span>Other Deductions</span>
-                  <span className="amount">{formatCurrency(payroll.deductions.other)}</span>
-                </div>
-                <div className="deductions-total">
-                  <span>Total Deductions</span>
-                  <span className="total-amount">{formatCurrency(totalDeductions)}</span>
-                </div>
-              </div>
-            </div>
+          {/* Payslip Title */}
+          <div className="payslip-title-section">
+            <h2 className="payslip-main-title">Payslip For {getMonthYear(payroll.payPeriod.start)}</h2>
           </div>
 
-          {/* Net Pay */}
-          <div className="net-pay-section">
-            <h3 className="net-pay-title">Net Pay</h3>
-            <p className="net-pay-amount">{formatCurrency(payroll.netPay)}</p>
-            <p className="net-pay-description">Amount to be deposited to your account</p>
+          {/* Employee Information Table */}
+          <div className="employee-info-table">
+            <table className="info-table">
+              <tbody>
+                <tr>
+                  <td className="info-label"><strong>Employee Id</strong></td>
+                  <td className="info-value">{payroll.employee.employeeId}</td>
+                  <td className="info-label"><strong>Name</strong></td>
+                  <td className="info-value">{payroll.employee.name}</td>
+                </tr>
+                <tr>
+                  <td className="info-label"><strong>Designation</strong></td>
+                  <td className="info-value">{payroll.employee.position}</td>
+                  <td className="info-label"><strong>LOP days</strong></td>
+                  <td className="info-value">0</td>
+                </tr>
+                <tr>
+                  <td className="info-label"><strong>Location</strong></td>
+                  <td className="info-value">{payroll.company.address}</td>
+                  <td className="info-label"><strong>Bank A/C</strong></td>
+                  <td className="info-value">{payroll.employee.bankAccount || 'N/A'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Earnings and Deductions Table */}
+          <div className="earnings-deductions-table">
+            <table className="payroll-table">
+              <thead>
+                <tr>
+                  <th className="earnings-header" colSpan="2">Earnings</th>
+                  <th className="deductions-header" colSpan="2">Deductions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="item-label">Basic</td>
+                  <td className="amount-value">{formatCurrency(payroll.salary.basicSalary).replace('₹', '').trim()}</td>
+                  <td className="item-label">Leave Deduction</td>
+                  <td className="amount-value">{payroll.deductions.LeaveDeduction}.00</td>
+                </tr>
+                <tr>
+                  <td className="item-label">House Rent and Allowance</td>
+                  <td className="amount-value">{formatCurrency(payroll.salary.allowances).replace('₹', '').trim()}</td>
+                  <td className="item-label">LOP Deduction</td>
+                  <td className="amount-value">{payroll.deductions.LOP_Deduction}.00</td>
+                </tr>
+                <tr>
+                  <td className="item-label">Gross Salary</td>
+                  <td className="amount-value">{formatCurrency(totalEarnings).replace('₹', '').trim()}</td>
+                  <td className="item-label">Late Deduction</td>
+                  <td className="amount-value">{payroll.deductions.Late_Deduction}.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Net Salary Section */}
+          <div className="net-salary-section">
+            <table className="net-salary-table">
+              <tbody>
+                <tr>
+                  <td className="net-salary-label" colSpan="4"><strong>Net Pay: {formatCurrency(totalEarnings-totalDeductions)}</strong></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           {/* Footer */}
-          <div className="payslip-footer">
+          <div className="payslip-footer-new">
             <p>This is a computer-generated payslip and does not require a signature.</p>
             <p>For any queries, please contact HR at {payroll.company.email}</p>
             <p className="generated-date">Generated on {new Date().toLocaleDateString('en-IN')}</p>

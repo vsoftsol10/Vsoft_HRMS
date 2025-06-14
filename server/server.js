@@ -15,7 +15,7 @@ const payrolls = [
       name: 'VSoft Solutions',
       address: 'Tirunelveli, TN, India',
       phone: '+91-9876543210',
-      email: 'hr@vsoftsolutions.com'
+      email: 'info@thevsoft.com'
     },
     employee: {
       name: 'Vigneshwaran',
@@ -31,12 +31,10 @@ const payrolls = [
       allowances: 3000
     },
     deductions: {
-      tax: 5000,
-      insurance: 1500,
-      retirement: 2000,
-      other: 500
+      LeaveDeduction: 0,
+      LOP_Deduction: 316,
+      Late_Deduction: 100,
     },
-    netPay: 28000
   },
   {
     id: 2,
@@ -45,7 +43,7 @@ const payrolls = [
       name: 'VSoft Solutions',
       address: 'Tirunelveli, TN, India',
       phone: '+91-9876543210',
-      email: 'hr@vsoftsolutions.com'
+      email: 'info@thevsoft.com'
     },
     employee: {
       name: 'Karthik',
@@ -61,12 +59,10 @@ const payrolls = [
       allowances: 3000
     },
     deductions: {
-      tax: 5000,
-      insurance: 1500,
-      retirement: 2000,
-      other: 500
+      LeaveDeduction: 0,
+      LOP_Deduction: 316,
+      Late_Deduction: 100,
     },
-    netPay: 32000
   },
   {
     id: 3,
@@ -75,7 +71,7 @@ const payrolls = [
       name: 'VSoft Solutions',
       address: 'Tirunelveli, TN, India',
       phone: '+91-9876543210',
-      email: 'hr@vsoftsolutions.com'
+      email: 'info@thevsoft.com'
     },
     employee: {
       name: 'Hameed Sufiyan',
@@ -91,12 +87,10 @@ const payrolls = [
       allowances: 3000
     },
     deductions: {
-      tax: 5000,
-      insurance: 1500,
-      retirement: 2000,
-      other: 500
+      LeaveDeduction: 0,
+      LOP_Deduction: 316,
+      Late_Deduction: 100,
     },
-    netPay: 41000
   },
   {
     id: 4,
@@ -105,7 +99,7 @@ const payrolls = [
       name: 'VSoft Solutions',
       address: 'Tirunelveli, TN, India',
       phone: '+91-9876543210',
-      email: 'hr@vsoftsolutions.com'
+      email: 'info@thevsoft.com'
     },
     employee: {
       name: 'Nirmal',
@@ -115,18 +109,16 @@ const payrolls = [
       email: 'nirmal@vsoft.com'
     },
     salary: {
-      basicSalary: 30000,
+      basicSalary: 7500,
       overtime: 1000,
       bonus: 2000,
-      allowances: 3000
+      allowances: 2000
     },
     deductions: {
-      tax: 5000,
-      insurance: 1500,
-      retirement: 2000,
-      other: 500
+      LeaveDeduction: 0,
+      LOP_Deduction: 0,
+      Late_Deduction: 0,
     },
-    netPay: 27000
   }
 ];
 
