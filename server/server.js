@@ -122,6 +122,49 @@ const payrolls = [
   }
 ];
 
+
+// //Get Api
+// app.get('/api/payroll', (req, res) => {
+//   res.json(payrolls);
+// });
+
+//Post API
+app.post('/api/payroll', (req, res) => {
+  const newPayroll = req.body;
+  newPayroll.id = payrolls.length + 1;
+  payrolls.push(newPayroll);
+  res.status(201).json(newPayroll);
+});
+
+//PUT API
+
+app.put('/api/payroll/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = payrolls.findIndex(p => p.id === id);
+
+  if (index !== -1) {
+    payrolls[index] = { ...payrolls[index], ...req.body, id };
+    res.json(payrolls[index]);
+  } else {
+    res.status(404).json({ message: 'Payroll not found' });
+  }
+});
+
+
+//Delete API
+app.delete('/api/payroll/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = payrolls.findIndex(p => p.id === id);
+
+  if (index !== -1) {
+    payrolls.splice(index, 1);
+    res.status(204).send();
+  } else {
+    res.status(404).json({ message: 'Payroll not found' });
+  }
+});
+
+
 // API route
 app.get('/api/payroll/:id', (req, res) => {
   const id = parseInt(req.params.id);

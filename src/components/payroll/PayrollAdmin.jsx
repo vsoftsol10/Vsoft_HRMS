@@ -3,8 +3,25 @@ import { Plus, Edit, Trash2, Save, X, Users, DollarSign, Calendar, Building } fr
 
 const PayrollAdmin = () => {
   const [payrolls, setPayrolls] = useState([]);
+  const [payrollList, setPayrollList] = useState([]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPayroll, setEditingPayroll] = useState(null);
+ 
+  const fetchPayrollList = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/payroll');
+      const data = await res.json();
+      setPayrollList(data);
+    } catch (err) {
+      console.error('Error fetching payrolls:', err);
+    }
+  };
+  
+  useEffect(() => {
+    fetchPayrollList();
+  }, []);
+
   const [formData, setFormData] = useState({
     payPeriod: { start: '', end: '', payDate: '' },
     company: {
@@ -112,23 +129,38 @@ const PayrollAdmin = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (editingPayroll) {
-      setPayrolls(prev => prev.map(p => 
-        p.id === editingPayroll.id ? { ...formData, id: editingPayroll.id } : p
-      ));
-    } else {
-      const newPayroll = {
-        ...formData,
-        id: Date.now()
-      };
-      setPayrolls(prev => [...prev, newPayroll]);
-    }
-    
-    closeModal();
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const url = editingPayroll
+    ? `http://localhost:8000/api/payroll/${editingPayroll.id}`
+    : 'http://localhost:8000/api/payroll';
+
+  const method = editingPayroll ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!res.ok) throw new Error('Something went wrong');
+
+    const data = await res.json();
+    console.log('Payroll saved:', data);
+
+    fetchPayrollList(); // refresh list
+    setIsModalOpen(false); // close modal
+    setEditingPayroll(null); // reset
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   const handleEdit = (payroll) => {
     setEditingPayroll(payroll);
