@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Save, X, Users, DollarSign, Calendar, Building } from 'lucide-react';
+import './PayrollAdmin.css';
 
 const PayrollAdmin = () => {
   const [payrolls, setPayrolls] = useState([]);
-  const [payrollList, setPayrollList] = useState([]);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPayroll, setEditingPayroll] = useState(null);
  
@@ -12,9 +11,69 @@ const PayrollAdmin = () => {
     try {
       const res = await fetch('http://localhost:8000/api/payroll');
       const data = await res.json();
-      setPayrollList(data);
+      setPayrolls(data);
     } catch (err) {
       console.error('Error fetching payrolls:', err);
+      // Fallback to mock data if API fails
+      const mockData = [
+        {
+          id: 1,
+          payPeriod: { start: '2024-01-01', end: '2024-01-31', payDate: '2024-02-01' },
+          company: {
+            name: 'VSoft Solutions',
+            address: 'Tirunelveli, TN, India',
+            phone: '+91-9876543210',
+            email: 'info@thevsoft.com'
+          },
+          employee: {
+            name: 'Vigneshwaran',
+            employeeId: 'EMP001',
+            position: 'Software Developer',
+            department: 'Engineering',
+            email: 'vignesh@vsoft.com'
+          },
+          salary: {
+            basicSalary: 30000,
+            overtime: 1000,
+            bonus: 2000,
+            allowances: 3000
+          },
+          deductions: {
+            LeaveDeduction: 0,
+            LOP_Deduction: 316,
+            Late_Deduction: 100
+          }
+        },
+        {
+          id: 2,
+          payPeriod: { start: '2024-01-01', end: '2024-01-31', payDate: '2024-02-01' },
+          company: {
+            name: 'VSoft Solutions',
+            address: 'Tirunelveli, TN, India',
+            phone: '+91-9876543210',
+            email: 'info@thevsoft.com'
+          },
+          employee: {
+            name: 'Karthik',
+            employeeId: 'EMP002',
+            position: 'Graphics Designer',
+            department: 'Engineering',
+            email: 'karthik@vsoft.com'
+          },
+          salary: {
+            basicSalary: 35000,
+            overtime: 1000,
+            bonus: 2000,
+            allowances: 3000
+          },
+          deductions: {
+            LeaveDeduction: 0,
+            LOP_Deduction: 316,
+            Late_Deduction: 100
+          }
+        }
+      ];
+      setPayrolls(mockData);
     }
   };
   
@@ -50,69 +109,6 @@ const PayrollAdmin = () => {
     }
   });
 
-  // Mock data for initial load
-  useEffect(() => {
-    const mockData = [
-      {
-        id: 1,
-        payPeriod: { start: '2024-01-01', end: '2024-01-31', payDate: '2024-02-01' },
-        company: {
-          name: 'VSoft Solutions',
-          address: 'Tirunelveli, TN, India',
-          phone: '+91-9876543210',
-          email: 'info@thevsoft.com'
-        },
-        employee: {
-          name: 'Vigneshwaran',
-          employeeId: 'EMP001',
-          position: 'Software Developer',
-          department: 'Engineering',
-          email: 'vignesh@vsoft.com'
-        },
-        salary: {
-          basicSalary: 30000,
-          overtime: 1000,
-          bonus: 2000,
-          allowances: 3000
-        },
-        deductions: {
-          LeaveDeduction: 0,
-          LOP_Deduction: 316,
-          Late_Deduction: 100
-        }
-      },
-      {
-        id: 2,
-        payPeriod: { start: '2024-01-01', end: '2024-01-31', payDate: '2024-02-01' },
-        company: {
-          name: 'VSoft Solutions',
-          address: 'Tirunelveli, TN, India',
-          phone: '+91-9876543210',
-          email: 'info@thevsoft.com'
-        },
-        employee: {
-          name: 'Karthik',
-          employeeId: 'EMP002',
-          position: 'Graphics Designer',
-          department: 'Engineering',
-          email: 'karthik@vsoft.com'
-        },
-        salary: {
-          basicSalary: 35000,
-          overtime: 1000,
-          bonus: 2000,
-          allowances: 3000
-        },
-        deductions: {
-          LeaveDeduction: 0,
-          LOP_Deduction: 316,
-          Late_Deduction: 100
-        }
-      }
-    ];
-    setPayrolls(mockData);
-  }, []);
-
   const calculateTotal = (salary, deductions) => {
     const totalSalary = salary.basicSalary + salary.overtime + salary.bonus + salary.allowances;
     const totalDeductions = deductions.LeaveDeduction + deductions.LOP_Deduction + deductions.Late_Deduction;
@@ -130,37 +126,50 @@ const PayrollAdmin = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const url = editingPayroll
-    ? `http://localhost:8000/api/payroll/${editingPayroll.id}`
-    : 'http://localhost:8000/api/payroll';
+    const url = editingPayroll
+      ? `http://localhost:8000/api/payroll/${editingPayroll.id}`
+      : 'http://localhost:8000/api/payroll';
 
-  const method = editingPayroll ? 'PUT' : 'POST';
+    const method = editingPayroll ? 'PUT' : 'POST';
 
-  try {
-    const res = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    });
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
 
-    if (!res.ok) throw new Error('Something went wrong');
+      if (!res.ok) throw new Error('Something went wrong');
 
-    const data = await res.json();
-    console.log('Payroll saved:', data);
+      const data = await res.json();
+      console.log('Payroll saved:', data);
 
-    fetchPayrollList(); // refresh list
-    setIsModalOpen(false); // close modal
-    setEditingPayroll(null); // reset
+      // Refresh the payroll list
+      fetchPayrollList();
+      setIsModalOpen(false);
+      setEditingPayroll(null);
+      resetFormData();
 
-  } catch (err) {
-    console.error(err);
-  }
-};
-
+    } catch (err) {
+      console.error(err);
+      // Fallback to local state update if API fails
+      if (editingPayroll) {
+        setPayrolls(prev => prev.map(p => 
+          p.id === editingPayroll.id ? { ...formData, id: editingPayroll.id } : p
+        ));
+      } else {
+        const newPayroll = { ...formData, id: Date.now() };
+        setPayrolls(prev => [...prev, newPayroll]);
+      }
+      setIsModalOpen(false);
+      setEditingPayroll(null);
+      resetFormData();
+    }
+  };
 
   const handleEdit = (payroll) => {
     setEditingPayroll(payroll);
@@ -168,15 +177,26 @@ const PayrollAdmin = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this payroll?')) {
-      setPayrolls(prev => prev.filter(p => p.id !== id));
+      try {
+        const res = await fetch(`http://localhost:8000/api/payroll/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (!res.ok) throw new Error('Failed to delete');
+
+        // Refresh the payroll list
+        fetchPayrollList();
+      } catch (err) {
+        console.error('Error deleting payroll:', err);
+        // Fallback to local state update if API fails
+        setPayrolls(prev => prev.filter(p => p.id !== id));
+      }
     }
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingPayroll(null);
+  const resetFormData = () => {
     setFormData({
       payPeriod: { start: '', end: '', payDate: '' },
       company: {
@@ -206,46 +226,27 @@ const PayrollAdmin = () => {
     });
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingPayroll(null);
+    resetFormData();
+  };
+
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f5f3f5',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
+    <div className="payroll-admin">
       {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #80407c 0%, #6d356a 100%)',
-        color: 'white',
-        padding: '24px',
-        boxShadow: '0 4px 20px rgba(128, 64, 124, 0.3)'
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="header">
+        <div className="header-content">
+          <div className="header-left">
             <Building size={32} />
             <div>
-              <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 'bold' }}>VSoft Solutions</h1>
-              <p style={{ margin: 0, opacity: 0.9, fontSize: '16px' }}>Payroll Management System</p>
+              <h1>VSoft Solutions</h1>
+              <p>Payroll Management System</p>
             </div>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            style={{
-              backgroundColor: '#d8c8d8',
-              color: '#80407c',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}
-            onMouseOver={(e) => e.target.style.backgroundColor = '#c8b8c8'}
-            onMouseOut={(e) => e.target.style.backgroundColor = '#d8c8d8'}
+            className="add-button"
           >
             <Plus size={20} />
             Add New Payroll
@@ -254,41 +255,29 @@ const PayrollAdmin = () => {
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="main-content">
         {/* Stats Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '32px' }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '24px',
-            borderRadius: '12px',
-            boxShadow: '0 4px 20px rgba(140, 139, 140, 0.1)',
-            border: '1px solid #e8e8e8'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ backgroundColor: '#80407c', color: 'white', padding: '12px', borderRadius: '8px' }}>
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-content">
+              <div className="stat-icon">
                 <Users size={24} />
               </div>
               <div>
-                <p style={{ margin: 0, color: '#8c8b8c', fontSize: '14px' }}>Total Employees</p>
-                <h3 style={{ margin: 0, color: '#80407c', fontSize: '24px', fontWeight: 'bold' }}>{payrolls.length}</h3>
+                <p className="stat-label">Total Employees</p>
+                <h3 className="stat-value">{payrolls.length}</h3>
               </div>
             </div>
           </div>
           
-          <div style={{
-            backgroundColor: 'white',
-            padding: '24px',
-            borderRadius: '12px',
-            boxShadow: '0 4px 20px rgba(140, 139, 140, 0.1)',
-            border: '1px solid #e8e8e8'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ backgroundColor: '#80407c', color: 'white', padding: '12px', borderRadius: '8px' }}>
+          <div className="stat-card">
+            <div className="stat-content">
+              <div className="stat-icon">
                 <DollarSign size={24} />
               </div>
               <div>
-                <p style={{ margin: 0, color: '#8c8b8c', fontSize: '14px' }}>Total Payroll</p>
-                <h3 style={{ margin: 0, color: '#80407c', fontSize: '24px', fontWeight: 'bold' }}>
+                <p className="stat-label">Total Payroll</p>
+                <h3 className="stat-value">
                   ₹{payrolls.reduce((sum, p) => sum + calculateTotal(p.salary, p.deductions), 0).toLocaleString()}
                 </h3>
               </div>
@@ -297,28 +286,22 @@ const PayrollAdmin = () => {
         </div>
 
         {/* Payroll List */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 4px 20px rgba(140, 139, 140, 0.1)',
-          border: '1px solid #e8e8e8',
-          overflow: 'hidden'
-        }}>
-          <div style={{ padding: '24px', borderBottom: '1px solid #e8e8e8' }}>
-            <h2 style={{ margin: 0, color: '#80407c', fontSize: '20px', fontWeight: 'bold' }}>Employee Payrolls</h2>
+        <div className="payroll-list-container">
+          <div className="payroll-list-header">
+            <h2>Employee Payrolls</h2>
           </div>
           
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="table-wrapper">
+            <table className="payroll-table">
               <thead>
-                <tr style={{ backgroundColor: '#f8f6f8' }}>
-                  <th style={{ padding: '16px', textAlign: 'left', color: '#80407c', fontWeight: 'bold' }}>Employee</th>
-                  <th style={{ padding: '16px', textAlign: 'left', color: '#80407c', fontWeight: 'bold' }}>Position</th>
-                  <th style={{ padding: '16px', textAlign: 'left', color: '#80407c', fontWeight: 'bold' }}>Pay Period</th>
-                  <th style={{ padding: '16px', textAlign: 'left', color: '#80407c', fontWeight: 'bold' }}>Gross Salary</th>
-                  <th style={{ padding: '16px', textAlign: 'left', color: '#80407c', fontWeight: 'bold' }}>Deductions</th>
-                  <th style={{ padding: '16px', textAlign: 'left', color: '#80407c', fontWeight: 'bold' }}>Net Salary</th>
-                  <th style={{ padding: '16px', textAlign: 'center', color: '#80407c', fontWeight: 'bold' }}>Actions</th>
+                <tr>
+                  <th>Employee</th>
+                  <th>Position</th>
+                  <th>Pay Period</th>
+                  <th>Gross Salary</th>
+                  <th>Deductions</th>
+                  <th>Net Salary</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -328,55 +311,31 @@ const PayrollAdmin = () => {
                   const netSalary = grossSalary - totalDeductions;
                   
                   return (
-                    <tr key={payroll.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                      <td style={{ padding: '16px' }}>
-                        <div>
-                          <div style={{ fontWeight: 'bold', color: '#333' }}>{payroll.employee.name}</div>
-                          <div style={{ fontSize: '14px', color: '#8c8b8c' }}>{payroll.employee.employeeId}</div>
+                    <tr key={payroll.id}>
+                      <td>
+                        <div className="employee-info">
+                          <div className="employee-name">{payroll.employee.name}</div>
+                          <div className="employee-id">{payroll.employee.employeeId}</div>
                         </div>
                       </td>
-                      <td style={{ padding: '16px', color: '#666' }}>{payroll.employee.position}</td>
-                      <td style={{ padding: '16px', color: '#666' }}>
+                      <td>{payroll.employee.position}</td>
+                      <td>
                         {new Date(payroll.payPeriod.start).toLocaleDateString()} - {new Date(payroll.payPeriod.end).toLocaleDateString()}
                       </td>
-                      <td style={{ padding: '16px', color: '#28a745', fontWeight: 'bold' }}>₹{grossSalary.toLocaleString()}</td>
-                      <td style={{ padding: '16px', color: '#dc3545', fontWeight: 'bold' }}>₹{totalDeductions.toLocaleString()}</td>
-                      <td style={{ padding: '16px', color: '#80407c', fontWeight: 'bold', fontSize: '16px' }}>₹{netSalary.toLocaleString()}</td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      <td className="gross-salary">₹{grossSalary.toLocaleString()}</td>
+                      <td className="deductions">₹{totalDeductions.toLocaleString()}</td>
+                      <td className="net-salary">₹{netSalary.toLocaleString()}</td>
+                      <td>
+                        <div className="action-buttons">
                           <button
                             onClick={() => handleEdit(payroll)}
-                            style={{
-                              backgroundColor: '#d8c8d8',
-                              color: '#80407c',
-                              border: 'none',
-                              padding: '8px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              transition: 'all 0.3s ease'
-                            }}
-                            onMouseOver={(e) => e.target.style.backgroundColor = '#c8b8c8'}
-                            onMouseOut={(e) => e.target.style.backgroundColor = '#d8c8d8'}
+                            className="edit-button"
                           >
                             <Edit size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(payroll.id)}
-                            style={{
-                              backgroundColor: '#ffe6e6',
-                              color: '#dc3545',
-                              border: 'none',
-                              padding: '8px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              transition: 'all 0.3s ease'
-                            }}
-                            onMouseOver={(e) => e.target.style.backgroundColor = '#ffd6d6'}
-                            onMouseOut={(e) => e.target.style.backgroundColor = '#ffe6e6'}
+                            className="delete-button"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -393,111 +352,47 @@ const PayrollAdmin = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            width: '100%',
-            maxWidth: '800px',
-            maxHeight: '90vh',
-            overflow: 'auto',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
-          }}>
-            <div style={{
-              padding: '24px',
-              borderBottom: '1px solid #e8e8e8',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              backgroundColor: '#80407c',
-              color: 'white',
-              borderRadius: '12px 12px 0 0'
-            }}>
-              <h2 style={{ margin: 0, fontSize: '20px' }}>
-                {editingPayroll ? 'Edit Payroll' : 'Add New Payroll'}
-              </h2>
-              <button
-                onClick={closeModal}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  color: 'white',
-                  cursor: 'pointer',
-                  padding: '4px'
-                }}
-              >
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h2>{editingPayroll ? 'Edit Payroll' : 'Add New Payroll'}</h2>
+              <button onClick={closeModal} className="close-button">
                 <X size={24} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
+            <form onSubmit={handleSubmit} className="modal-form">
               {/* Pay Period Section */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ color: '#80407c', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="form-section">
+                <h3 className="section-title">
                   <Calendar size={20} />
                   Pay Period
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Start Date</label>
+                <div className="form-grid">
+                  <div className="form-field">
+                    <label>Start Date</label>
                     <input
                       type="date"
                       value={formData.payPeriod.start}
                       onChange={(e) => handleInputChange('payPeriod', 'start', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                       required
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>End Date</label>
+                  <div className="form-field">
+                    <label>End Date</label>
                     <input
                       type="date"
                       value={formData.payPeriod.end}
                       onChange={(e) => handleInputChange('payPeriod', 'end', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                       required
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Pay Date</label>
+                  <div className="form-field">
+                    <label>Pay Date</label>
                     <input
                       type="date"
                       value={formData.payPeriod.payDate}
                       onChange={(e) => handleInputChange('payPeriod', 'payDate', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                       required
                     />
                   </div>
@@ -505,77 +400,45 @@ const PayrollAdmin = () => {
               </div>
 
               {/* Employee Section */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ color: '#80407c', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="form-section">
+                <h3 className="section-title">
                   <Users size={20} />
                   Employee Details
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Employee Name</label>
+                <div className="form-grid">
+                  <div className="form-field">
+                    <label>Employee Name</label>
                     <input
                       type="text"
                       value={formData.employee.name}
                       onChange={(e) => handleInputChange('employee', 'name', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                       required
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Employee ID</label>
+                  <div className="form-field">
+                    <label>Employee ID</label>
                     <input
                       type="text"
                       value={formData.employee.employeeId}
                       onChange={(e) => handleInputChange('employee', 'employeeId', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                       required
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Position</label>
+                  <div className="form-field">
+                    <label>Position</label>
                     <input
                       type="text"
                       value={formData.employee.position}
                       onChange={(e) => handleInputChange('employee', 'position', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                       required
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Email</label>
+                  <div className="form-field">
+                    <label>Email</label>
                     <input
                       type="email"
                       value={formData.employee.email}
                       onChange={(e) => handleInputChange('employee', 'email', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                       required
                     />
                   </div>
@@ -583,178 +446,86 @@ const PayrollAdmin = () => {
               </div>
 
               {/* Salary Section */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ color: '#80407c', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="form-section">
+                <h3 className="section-title">
                   <DollarSign size={20} />
                   Salary Details
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Basic Salary (₹)</label>
+                <div className="form-grid">
+                  <div className="form-field">
+                    <label>Basic Salary (₹)</label>
                     <input
                       type="number"
                       value={formData.salary.basicSalary}
                       onChange={(e) => handleInputChange('salary', 'basicSalary', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                       required
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Overtime (₹)</label>
+                  <div className="form-field">
+                    <label>Overtime (₹)</label>
                     <input
                       type="number"
                       value={formData.salary.overtime}
                       onChange={(e) => handleInputChange('salary', 'overtime', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Bonus (₹)</label>
+                  <div className="form-field">
+                    <label>Bonus (₹)</label>
                     <input
                       type="number"
                       value={formData.salary.bonus}
                       onChange={(e) => handleInputChange('salary', 'bonus', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Allowances (₹)</label>
+                  <div className="form-field">
+                    <label>Allowances (₹)</label>
                     <input
                       type="number"
                       value={formData.salary.allowances}
                       onChange={(e) => handleInputChange('salary', 'allowances', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                     />
                   </div>
                 </div>
               </div>
 
               {/* Deductions Section */}
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ color: '#80407c', marginBottom: '16px' }}>Deductions</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Leave Deduction (₹)</label>
+              <div className="form-section">
+                <h3 className="section-title">Deductions</h3>
+                <div className="form-grid">
+                  <div className="form-field">
+                    <label>Leave Deduction (₹)</label>
                     <input
                       type="number"
                       value={formData.deductions.LeaveDeduction}
                       onChange={(e) => handleInputChange('deductions', 'LeaveDeduction', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>LOP Deduction (₹)</label>
+                  <div className="form-field">
+                    <label>LOP Deduction (₹)</label>
                     <input
                       type="number"
                       value={formData.deductions.LOP_Deduction}
                       onChange={(e) => handleInputChange('deductions', 'LOP_Deduction', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#666', fontWeight: 'bold' }}>Late Deduction (₹)</label>
+                  <div className="form-field">
+                    <label>Late Deduction (₹)</label>
                     <input
                       type="number"
                       value={formData.deductions.Late_Deduction}
                       onChange={(e) => handleInputChange('deductions', 'Late_Deduction', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '2px solid #e8e8e8',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                      }}
                     />
                   </div>
                 </div>
               </div>
 
               {/* Form Actions */}
-              <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', paddingTop: '24px', borderTop: '1px solid #e8e8e8' }}>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  style={{
-                    backgroundColor: '#8c8b8c',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '16px',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#7c7b7c'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#8c8b8c'}
-                >
+              <div className="form-actions">
+                <button type="button" onClick={closeModal} className="cancel-button">
                   <X size={16} />
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  style={{
-                    backgroundColor: '#80407c',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#6d356a'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#80407c'}
-                >
+                <button type="submit" className="submit-button">
                   <Save size={16} />
                   {editingPayroll ? 'Update' : 'Save'} Payroll
                 </button>

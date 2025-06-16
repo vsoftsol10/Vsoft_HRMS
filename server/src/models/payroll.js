@@ -1,292 +1,282 @@
-const mysql = require('mysql2/promise');
-const db = require('../config/database');
+// routes/payroll.js
+const express = require('express');
+const router = express.Router();
+const { Pool } = require('pg');
 
-class Payroll {
-  constructor(data) {
-    this.id = data.id;
-    this.employee_id = data.employee_id;
-    this.pay_period_start = data.pay_period_start;
-    this.pay_period_end = data.pay_period_end;
-    this.basic_salary = data.basic_salary;
-    this.allowances = data.allowances || 0;
-    this.overtime_hours = data.overtime_hours || 0;
-    this.overtime_rate = data.overtime_rate || 0;
-    this.gross_salary = data.gross_salary;
-    this.tax_deduction = data.tax_deduction || 0;
-    this.insurance_deduction = data.insurance_deduction || 0;
-    this.other_deductions = data.other_deductions || 0;
-    this.total_deductions = data.total_deductions;
-    this.net_salary = data.net_salary;
-    this.payment_status = data.payment_status || 'pending';
-    this.payment_date = data.payment_date;
-    this.created_at = data.created_at;
-    this.updated_at = data.updated_at;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
+
+// GET /api/payroll - Get all payroll records
+router.get('/', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        id,
+        employee_id,
+        employee_name,
+        position,
+        department,
+        email,
+        pay_period_start,
+        pay_period_end,
+        pay_date,
+        basic_salary,
+        overtime,
+        bonus,
+        allowances,
+        leave_deduction,
+        lop_deduction,
+        late_deduction,
+        net_salary,
+        created_at
+      FROM payroll 
+      ORDER BY created_at DESC
+    `);
+    
+    // Transform to match your frontend format
+    const payrolls = result.rows.map(row => ({
+      id: row.id,
+      payPeriod: {
+        start: row.pay_period_start,
+        end: row.pay_period_end,
+        payDate: row.pay_date
+      },
+      company: {
+        name: 'VSoft Solutions',
+        address: 'Tirunelveli, TN, India',
+        phone: '+91-9876543210',
+        email: 'info@thevsoft.com'
+      },
+      employee: {
+        name: row.employee_name,
+        employeeId: row.employee_id,
+        position: row.position,
+        department: row.department,
+        email: row.email
+      },
+      salary: {
+        basicSalary: parseFloat(row.basic_salary),
+        overtime: parseFloat(row.overtime),
+        bonus: parseFloat(row.bonus),
+        allowances: parseFloat(row.allowances)
+      },
+      deductions: {
+        LeaveDeduction: parseFloat(row.leave_deduction),
+        LOP_Deduction: parseFloat(row.lop_deduction),
+        Late_Deduction: parseFloat(row.late_deduction)
+      },
+      netSalary: parseFloat(row.net_salary)
+    }));
+    
+    res.json(payrolls);
+  } catch (error) {
+    console.error('Error fetching payroll:', error);
+    res.status(500).json({ error: 'Failed to fetch payroll data' });
   }
+});
 
-  // Create new payroll record
-  static async create(payrollData) {
-    try {
-      const connection = await db.getConnection();
-      
-      // Calculate gross salary
-      const overtimePay = payrollData.overtime_hours * payrollData.overtime_rate;
-      const grossSalary = payrollData.basic_salary + payrollData.allowances + overtimePay;
-      
-      // Calculate total deductions
-      const totalDeductions = 
-        payrollData.tax_deduction + 
-        payrollData.insurance_deduction + 
-        payrollData.other_deductions;
-      
-      // Calculate net salary
-      const netSalary = grossSalary - totalDeductions;
-
-      const [result] = await connection.execute(
-        `INSERT INTO payroll (
-          employee_id, pay_period_start, pay_period_end, basic_salary, 
-          allowances, overtime_hours, overtime_rate, gross_salary,
-          tax_deduction, insurance_deduction, other_deductions, 
-          total_deductions, net_salary, payment_status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          payrollData.employee_id,
-          payrollData.pay_period_start,
-          payrollData.pay_period_end,
-          payrollData.basic_salary,
-          payrollData.allowances || 0,
-          payrollData.overtime_hours || 0,
-          payrollData.overtime_rate || 0,
-          grossSalary,
-          payrollData.tax_deduction || 0,
-          payrollData.insurance_deduction || 0,
-          payrollData.other_deductions || 0,
-          totalDeductions,
-          netSalary,
-          payrollData.payment_status || 'pending'
-        ]
-      );
-
-      connection.release();
-      return await this.findById(result.insertId);
-    } catch (error) {
-      throw new Error(`Error creating payroll: ${error.message}`);
+// GET /api/payroll/:id - Get specific payroll record
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM payroll WHERE id = $1', [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Payroll not found' });
     }
+    
+    const row = result.rows[0];
+    const payroll = {
+      id: row.id,
+      payPeriod: {
+        start: row.pay_period_start,
+        end: row.pay_period_end,
+        payDate: row.pay_date
+      },
+      company: {
+        name: 'VSoft Solutions',
+        address: 'Tirunelveli, TN, India',
+        phone: '+91-9876543210',
+        email: 'info@thevsoft.com'
+      },
+      employee: {
+        name: row.employee_name,
+        employeeId: row.employee_id,
+        position: row.position,
+        department: row.department,
+        email: row.email
+      },
+      salary: {
+        basicSalary: parseFloat(row.basic_salary),
+        overtime: parseFloat(row.overtime),
+        bonus: parseFloat(row.bonus),
+        allowances: parseFloat(row.allowances)
+      },
+      deductions: {
+        LeaveDeduction: parseFloat(row.leave_deduction),
+        LOP_Deduction: parseFloat(row.lop_deduction),
+        Late_Deduction: parseFloat(row.late_deduction)
+      },
+      netSalary: parseFloat(row.net_salary)
+    };
+    
+    res.json(payroll);
+  } catch (error) {
+    console.error('Error fetching payroll:', error);
+    res.status(500).json({ error: 'Failed to fetch payroll data' });
   }
+});
 
-  // Find payroll by ID
-  static async findById(id) {
-    try {
-      const connection = await db.getConnection();
-      const [rows] = await connection.execute(
-        `SELECT p.*, 
-         e.first_name, e.last_name, e.employee_id as emp_code,
-         d.name as department_name
-         FROM payroll p
-         JOIN employees e ON p.employee_id = e.id
-         LEFT JOIN departments d ON e.department_id = d.id
-         WHERE p.id = ?`,
-        [id]
-      );
-      connection.release();
-      
-      if (rows.length === 0) {
-        return null;
-      }
-      
-      return new Payroll(rows[0]);
-    } catch (error) {
-      throw new Error(`Error finding payroll: ${error.message}`);
+// POST /api/payroll - Create new payroll record
+router.post('/', async (req, res) => {
+  try {
+    const { payPeriod, employee, salary, deductions } = req.body;
+    
+    const netSalary = (
+      salary.basicSalary + salary.overtime + salary.bonus + salary.allowances
+    ) - (
+      deductions.LeaveDeduction + deductions.LOP_Deduction + deductions.Late_Deduction
+    );
+    
+    const result = await pool.query(`
+      INSERT INTO payroll (
+        employee_id, employee_name, position, department, email,
+        pay_period_start, pay_period_end, pay_date,
+        basic_salary, overtime, bonus, allowances,
+        leave_deduction, lop_deduction, late_deduction, net_salary
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      RETURNING *
+    `, [
+      employee.employeeId,
+      employee.name,
+      employee.position,
+      employee.department,
+      employee.email,
+      payPeriod.start,
+      payPeriod.end,
+      payPeriod.payDate,
+      salary.basicSalary,
+      salary.overtime,
+      salary.bonus,
+      salary.allowances,
+      deductions.LeaveDeduction,
+      deductions.LOP_Deduction,
+      deductions.Late_Deduction,
+      netSalary
+    ]);
+    
+    res.status(201).json({
+      id: result.rows[0].id,
+      payPeriod,
+      company: {
+        name: 'VSoft Solutions',
+        address: 'Tirunelveli, TN, India',
+        phone: '+91-9876543210',
+        email: 'info@thevsoft.com'
+      },
+      employee,
+      salary,
+      deductions,
+      netSalary
+    });
+  } catch (error) {
+    console.error('Error creating payroll:', error);
+    res.status(500).json({ error: 'Failed to create payroll record' });
+  }
+});
+
+// PUT /api/payroll/:id - Update payroll record
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { payPeriod, employee, salary, deductions } = req.body;
+    
+    const netSalary = (
+      salary.basicSalary + salary.overtime + salary.bonus + salary.allowances
+    ) - (
+      deductions.LeaveDeduction + deductions.LOP_Deduction + deductions.Late_Deduction
+    );
+    
+    const result = await pool.query(`
+      UPDATE payroll SET
+        employee_id = $2,
+        employee_name = $3,
+        position = $4,
+        department = $5,
+        email = $6,
+        pay_period_start = $7,
+        pay_period_end = $8,
+        pay_date = $9,
+        basic_salary = $10,
+        overtime = $11,
+        bonus = $12,
+        allowances = $13,
+        leave_deduction = $14,
+        lop_deduction = $15,
+        late_deduction = $16,
+        net_salary = $17
+      WHERE id = $1
+      RETURNING *
+    `, [
+      id,
+      employee.employeeId,
+      employee.name,
+      employee.position,
+      employee.department,
+      employee.email,
+      payPeriod.start,
+      payPeriod.end,
+      payPeriod.payDate,
+      salary.basicSalary,
+      salary.overtime,
+      salary.bonus,
+      salary.allowances,
+      deductions.LeaveDeduction,
+      deductions.LOP_Deduction,
+      deductions.Late_Deduction,
+      netSalary
+    ]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Payroll not found' });
     }
+    
+    res.json({
+      id: parseInt(id),
+      payPeriod,
+      company: {
+        name: 'VSoft Solutions',
+        address: 'Tirunelveli, TN, India',
+        phone: '+91-9876543210',
+        email: 'info@thevsoft.com'
+      },
+      employee,
+      salary,
+      deductions,
+      netSalary
+    });
+  } catch (error) {
+    console.error('Error updating payroll:', error);
+    res.status(500).json({ error: 'Failed to update payroll record' });
   }
+});
 
-  // Get all payroll records with pagination
-  static async findAll(options = {}) {
-    try {
-      const { 
-        page = 1, 
-        limit = 10, 
-        employee_id, 
-        status, 
-        pay_period_start, 
-        pay_period_end 
-      } = options;
-      
-      const offset = (page - 1) * limit;
-      let whereClause = '1=1';
-      const params = [];
-
-      // Add filters
-      if (employee_id) {
-        whereClause += ' AND p.employee_id = ?';
-        params.push(employee_id);
-      }
-      
-      if (status) {
-        whereClause += ' AND p.payment_status = ?';
-        params.push(status);
-      }
-      
-      if (pay_period_start) {
-        whereClause += ' AND p.pay_period_start >= ?';
-        params.push(pay_period_start);
-      }
-      
-      if (pay_period_end) {
-        whereClause += ' AND p.pay_period_end <= ?';
-        params.push(pay_period_end);
-      }
-
-      const connection = await db.getConnection();
-      
-      // Get total count
-      const [countResult] = await connection.execute(
-        `SELECT COUNT(*) as total 
-         FROM payroll p 
-         JOIN employees e ON p.employee_id = e.id
-         WHERE ${whereClause}`,
-        params
-      );
-
-      // Get paginated results
-      const [rows] = await connection.execute(
-        `SELECT p.*, 
-         e.first_name, e.last_name, e.employee_id as emp_code,
-         d.name as department_name
-         FROM payroll p
-         JOIN employees e ON p.employee_id = e.id
-         LEFT JOIN departments d ON e.department_id = d.id
-         WHERE ${whereClause}
-         ORDER BY p.pay_period_end DESC, p.created_at DESC
-         LIMIT ? OFFSET ?`,
-        [...params, parseInt(limit), offset]
-      );
-
-      connection.release();
-
-      return {
-        payrolls: rows.map(row => new Payroll(row)),
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: countResult[0].total,
-          pages: Math.ceil(countResult[0].total / limit)
-        }
-      };
-    } catch (error) {
-      throw new Error(`Error fetching payrolls: ${error.message}`);
+// DELETE /api/payroll/:id - Delete payroll record
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM payroll WHERE id = $1 RETURNING id', [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Payroll not found' });
     }
+    
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting payroll:', error);
+    res.status(500).json({ error: 'Failed to delete payroll record' });
   }
+});
 
-  // Update payroll record
-  static async updateById(id, updateData) {
-    try {
-      const connection = await db.getConnection();
-      
-      // If salary components are being updated, recalculate totals
-      if (updateData.basic_salary || updateData.allowances || 
-          updateData.overtime_hours || updateData.overtime_rate ||
-          updateData.tax_deduction || updateData.insurance_deduction ||
-          updateData.other_deductions) {
-        
-        const current = await this.findById(id);
-        if (!current) {
-          throw new Error('Payroll record not found');
-        }
-
-        const basicSalary = updateData.basic_salary || current.basic_salary;
-        const allowances = updateData.allowances || current.allowances;
-        const overtimeHours = updateData.overtime_hours || current.overtime_hours;
-        const overtimeRate = updateData.overtime_rate || current.overtime_rate;
-        
-        const grossSalary = basicSalary + allowances + (overtimeHours * overtimeRate);
-        
-        const taxDeduction = updateData.tax_deduction || current.tax_deduction;
-        const insuranceDeduction = updateData.insurance_deduction || current.insurance_deduction;
-        const otherDeductions = updateData.other_deductions || current.other_deductions;
-        
-        const totalDeductions = taxDeduction + insuranceDeduction + otherDeductions;
-        const netSalary = grossSalary - totalDeductions;
-        
-        updateData.gross_salary = grossSalary;
-        updateData.total_deductions = totalDeductions;
-        updateData.net_salary = netSalary;
-      }
-
-      const fields = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
-      const values = Object.values(updateData);
-
-      await connection.execute(
-        `UPDATE payroll SET ${fields}, updated_at = NOW() WHERE id = ?`,
-        [...values, id]
-      );
-
-      connection.release();
-      return await this.findById(id);
-    } catch (error) {
-      throw new Error(`Error updating payroll: ${error.message}`);
-    }
-  }
-
-  // Delete payroll record
-  static async deleteById(id) {
-    try {
-      const connection = await db.getConnection();
-      const [result] = await connection.execute(
-        'DELETE FROM payroll WHERE id = ?',
-        [id]
-      );
-      connection.release();
-      
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw new Error(`Error deleting payroll: ${error.message}`);
-    }
-  }
-
-  // Get payroll summary for employee
-  static async getEmployeePayrollSummary(employeeId, year) {
-    try {
-      const connection = await db.getConnection();
-      const [rows] = await connection.execute(
-        `SELECT 
-          COUNT(*) as total_payrolls,
-          SUM(gross_salary) as total_gross,
-          SUM(total_deductions) as total_deductions,
-          SUM(net_salary) as total_net,
-          AVG(net_salary) as avg_net_salary
-         FROM payroll 
-         WHERE employee_id = ? AND YEAR(pay_period_end) = ?`,
-        [employeeId, year]
-      );
-      connection.release();
-      
-      return rows[0];
-    } catch (error) {
-      throw new Error(`Error getting payroll summary: ${error.message}`);
-    }
-  }
-
-  // Update payment status
-  static async updatePaymentStatus(id, status, paymentDate = null) {
-    try {
-      const connection = await db.getConnection();
-      
-      const updateData = { payment_status: status };
-      if (paymentDate) {
-        updateData.payment_date = paymentDate;
-      }
-      
-      await connection.execute(
-        'UPDATE payroll SET payment_status = ?, payment_date = ?, updated_at = NOW() WHERE id = ?',
-        [status, paymentDate, id]
-      );
-      
-      connection.release();
-      return await this.findById(id);
-    } catch (error) {
-      throw new Error(`Error updating payment status: ${error.message}`);
-    }
-  }
-}
-
-module.exports = Payroll;
+module.exports = router;

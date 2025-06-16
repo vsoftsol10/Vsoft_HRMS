@@ -8,6 +8,7 @@ import PayrollAdmin from './components/payroll/PayrollAdmin'
 import AdminDashboard from './components/dashboard/AdminDashboard'
 import EmployeeDashboard from './components/dashboard/Employeedashboard'
 import InternPortal from './components/dashboard/InternPortal'
+import LandingPage from './components/LandingPage/LandingPage'
 
 
 
@@ -15,6 +16,7 @@ function App() {
 
   return (
     <Routes>
+      <Route path='/' element={<LandingPage/>} />
       <Route path='/admin/dashboard' element={<AdminDashboard/>} />
       <Route path='/employee/dashboard' element={<EmployeeDashboard/>} />
       <Route path='/dashboard' element={<InternPortal/>} />
