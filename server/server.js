@@ -279,3 +279,147 @@ app.listen(PORT, () => {
   console.log(`✅ Backend running on http://localhost:${PORT}`);
   console.log(`📊 Make sure your MySQL database is running!`);
 });
+
+
+
+//Authentication
+
+// Add this authentication endpoint to your existing backend code
+
+// POST API - Employee Authentication
+app.post('/api/authenticate', async (req, res) => {
+  try {
+    const { employeeCode, password } = req.body;
+    
+    if (!employeeCode || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Employee code and password are required' 
+      });
+    }
+    
+    // Query to find employee by employee_id (employee code)
+    const [rows] = await pool.execute(
+      'SELECT * FROM payrolls WHERE employee_id = ? LIMIT 1', 
+      [employeeCode]
+    );
+    
+    if (rows.length === 0) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid employee code or password' 
+      });
+    }
+    
+    const employee = rows[0];
+    
+    // For now, we'll use a simple password check
+    // In production, you should hash passwords and compare hashed values
+    // For demo purposes, let's assume password should be "password123"
+    // You can modify this logic based on your requirements
+    
+    if (password !== 'password123') {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid employee code or password' 
+      });
+    }
+    
+    // Calculate last salary (total of basic + overtime + bonus + allowances - deductions)
+    const lastSalary = parseFloat(employee.basic_salary) + 
+                      parseFloat(employee.overtime) + 
+                      parseFloat(employee.bonus) + 
+                      parseFloat(employee.allowances) - 
+                      parseFloat(employee.leave_deduction) - 
+                      parseFloat(employee.lop_deduction) - 
+                      parseFloat(employee.late_deduction);
+    
+    // Return employee information (excluding sensitive data)
+    const employeeInfo = {
+      id: employee.id,
+      name: employee.employee_name,
+      employeeId: employee.employee_id,
+      position: employee.position,
+      department: employee.department,
+      email: employee.employee_email,
+      lastSalary: lastSalary
+    };
+    
+    res.json({ 
+      success: true, 
+      message: 'Authentication successful',
+      employee: employeeInfo 
+    });
+    
+  } catch (error) {
+    console.error('Authentication error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error during authentication' 
+    });
+  }
+});
+
+// Optional: Add endpoint to get employee dashboard data
+app.get('/api/employee/:employeeId/dashboard', async (req, res) => {
+  try {
+    const employeeId = req.params.employeeId;
+    
+    // Get employee's payroll records
+    const [payrollRows] = await pool.execute(
+      'SELECT * FROM payrolls WHERE employee_id = ? ORDER BY created_at DESC', 
+      [employeeId]
+    );
+    
+    if (payrollRows.length === 0) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+    
+    const latestPayroll = payrollRows[0];
+    
+    // Calculate dashboard metrics
+    const dashboardData = {
+      employee: {
+        name: latestPayroll.employee_name,
+        employeeId: latestPayroll.employee_id,
+        position: latestPayroll.position,
+        department: latestPayroll.department,
+        email: latestPayroll.employee_email
+      },
+      payrollHistory: payrollRows.map(row => ({
+        id: row.id,
+        payPeriod: {
+          start: row.pay_period_start,
+          end: row.pay_period_end,
+          payDate: row.pay_date
+        },
+        netSalary: parseFloat(row.basic_salary) + 
+                  parseFloat(row.overtime) + 
+                  parseFloat(row.bonus) + 
+                  parseFloat(row.allowances) - 
+                  parseFloat(row.leave_deduction) - 
+                  parseFloat(row.lop_deduction) - 
+                  parseFloat(row.late_deduction)
+      })),
+      summary: {
+        totalPayrolls: payrollRows.length,
+        averageSalary: payrollRows.reduce((sum, row) => {
+          const netSalary = parseFloat(row.basic_salary) + 
+                          parseFloat(row.overtime) + 
+                          parseFloat(row.bonus) + 
+                          parseFloat(row.allowances) - 
+                          parseFloat(row.leave_deduction) - 
+                          parseFloat(row.lop_deduction) - 
+                          parseFloat(row.late_deduction);
+          return sum + netSalary;
+        }, 0) / payrollRows.length
+      }
+    };
+    
+    res.json(dashboardData);
+    
+  } catch (error) {
+    console.error('Error fetching employee dashboard:', error);
+    res.status(500).json({ message: 'Error fetching dashboard data' });
+  }
+});

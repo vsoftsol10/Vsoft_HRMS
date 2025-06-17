@@ -29,16 +29,18 @@
   gap: 16px;
 }
 
-.header-left h1 {
+.header-left div h1 {
   margin: 0;
   font-size: 28px;
   font-weight: bold;
+  color: white;
 }
 
-.header-left p {
+.header-left div p {
   margin: 0;
   opacity: 0.9;
   font-size: 16px;
+  color: white;
 }
 
 .add-button {
@@ -175,7 +177,7 @@
 
 .payroll-table td {
   padding: 16px;
-  color: #666;
+  color: #352d2d;
 }
 
 .employee-info {
@@ -185,12 +187,12 @@
 
 .employee-name {
   font-weight: bold;
-  color: #333;
+  color: #080808;
 }
 
 .employee-id {
   font-size: 14px;
-  color: #8c8b8c;
+  color: #777377;
 }
 
 .gross-salary {

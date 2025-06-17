@@ -1,115 +1,138 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './LandingPage.css';
-
-import logo from "../../assets/logo1.png"
+import logo from "../../assets/logo1.png";
+import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isLoaded, setIsLoaded] = useState(false);
+  const navigation = useNavigate();
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false);
 
-  useEffect(() => {
-    setIsLoaded(true);
-    
-    const handleMouseMove = (e) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      });
-    };
+  const handleNavigation = (portal) => {
+    switch(portal) {
+      case 'employee':
+        setShowEmployeeModal(true);
+        console.log('Opening Employee Portal Modal');
+        break;
+      case 'career':
+        // Navigate to career portal
+        console.log('Navigating to Non Employee Portal');
+        break;
+      case 'learning':
+        navigation("/intern/dashboard");
+        console.log('Navigating to Learning Portal');
+        break;
+      default:
+        break;
+    }
+  };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  const handleEmployeeAccess = (accessType) => {
+    switch(accessType) {
+      case 'admin':
+        navigation("/admin/dashboard");
+        console.log('Navigating to Admin Dashboard');
+        break;
+      case 'employee':
+        navigation("/employee/dashboard");
+        console.log('Navigating to Employee Dashboard');
+        break;
+      default:
+        break;
+    }
+    setShowEmployeeModal(false);
+  };
+
+  const closeModal = () => {
+    setShowEmployeeModal(false);
+  };
 
   return (
     <div className="landing-container">
-      {/* Animated Background */}
-      <div className="bg-animation">
-        <div className="gradient-orb orb-1"></div>
-        <div className="gradient-orb orb-2"></div>
-        <div className="gradient-orb orb-3"></div>
-        <div className="gradient-orb orb-4"></div>
-        <div className="floating-particles">
-          {[...Array(12)].map((_, i) => (
-            <div key={i} className={`particle particle-${i + 1}`}></div>
-          ))}
+      <div className="left-section">
+        <div className="logo-section">
+          <div className="logo-container">
+            <img src={logo} alt="VSoft Solutions Logo" className="logo-image" />
+          </div>
+        </div>
+        
+        <div className="welcome-content">
+          <h1>Welcome to VSoft Solutions</h1>
+          <p>Empowering growth through innovation and dedication</p>
         </div>
       </div>
 
-      {/* Interactive cursor glow */}
-      <div 
-        className="cursor-glow"
-        style={{
-          left: `${mousePosition.x}%`,
-          top: `${mousePosition.y}%`,
-        }}
-      ></div>
-
-      {/* Main Content */}
-      <div className={`content-wrapper ${isLoaded ? 'loaded' : ''}`}>
-        {/* Logo Section */}
-        <div className="logo-section">
-          <div className="logo-container">
-            <div className="logo-backdrop"></div>
-            <div className="logo-placeholder">
-              <div className="logo-icon">
-                {/* Replace this img src with your actual logo path */}
-                <img 
-                  src={logo} 
-                  alt="Company Logo" 
-                  className="logo-image"
-                />
-              </div>
-            </div>
-            <div className="logo-glow"></div>
-          </div>
-          <h1 className="brand-title">
-            <span className="title-line">Welcome to</span>
-            <span className="title-main">Excellence</span>
-          </h1>
-          <p className="brand-subtitle">
-            Empowering growth through innovation and dedication
-          </p>
-        </div>
-
-        {/* Buttons Section */}
-        <div className="button-section">
-          <div className="buttons-container">
-            <button className="landing-btn btn-primary">
-              <span className="btn-icon">👤</span>
-              <span className="btn-text">Employee</span>
-              <div className="btn-glow"></div>
+      <div className="right-section">
+        <div className="portal-section">
+          <h2>Choose Your Portal</h2>
+          
+          <div className="portal-buttons">
+            <button 
+              className="portal-btn employee-btn"
+              onClick={() => handleNavigation('employee')}
+            >
+              Employee Portal
             </button>
             
-            <button className="landing-btn btn-secondary">
-              <span className="btn-icon">🌍</span>
-              <span className="btn-text">Non Employee</span>
-              <div className="btn-glow"></div>
+            <button 
+              className="portal-btn career-btn"
+              onClick={() => handleNavigation('career')}
+            >
+              Non Employee Portal
             </button>
             
-            <button className="landing-btn btn-accent">
-              <span className="btn-icon">🎓</span>
-              <span className="btn-text">Training</span>
-              <div className="btn-glow"></div>
+            <button 
+              className="portal-btn learning-btn"
+              onClick={() => handleNavigation('learning')}
+            >
+              Learning Portal
             </button>
           </div>
           
-          <div className="action-hint">
-            <div className="hint-pulse"></div>
-            <span>Choose your path to get started</span>
-          </div>
+          <p className="helper-text">Choose your path to get started</p>
         </div>
       </div>
 
-      {/* Decorative Elements */}
-      <div className="decorative-grid">
-        {[...Array(20)].map((_, i) => (
-          <div key={i} className="grid-dot"></div>
-        ))}
-      </div>
-
-      {/* Bottom accent line */}
-      <div className="bottom-accent"></div>
+      {/* Employee Access Modal */}
+      {showEmployeeModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Employee Portal Access</h3>
+              <button className="close-btn" onClick={closeModal}>
+                &times;
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <p>Please select your access level:</p>
+              
+              <div className="access-buttons">
+                <button 
+                  className="access-btn admin-access-btn"
+                  onClick={() => handleEmployeeAccess('admin')}
+                >
+                  <div className="access-icon">🔐</div>
+                  <div className="access-info">
+                    <h4>Admin Access</h4>
+                    <p>Full system administration</p>
+                  </div>
+                </button>
+                
+                <button 
+                  className="access-btn employee-access-btn"
+                  onClick={() => handleEmployeeAccess('employee')}
+                >
+                  <div className="access-icon">👤</div>
+                  <div className="access-info">
+                    <h4>Employee Access</h4>
+                    <p>Standard employee dashboard</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

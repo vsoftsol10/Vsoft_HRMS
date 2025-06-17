@@ -314,8 +314,8 @@ const PayrollAdmin = () => {
                     <tr key={payroll.id}>
                       <td>
                         <div className="employee-info">
-                          <div className="employee-name">{payroll.employee.name}</div>
-                          <div className="employee-id">{payroll.employee.employeeId}</div>
+                          <div className="employee-name" style={{color:"#333"}}>{payroll.employee.name}</div>
+                          <div className="employee-id" >{payroll.employee.employeeId}</div>
                         </div>
                       </td>
                       <td>{payroll.employee.position}</td>
