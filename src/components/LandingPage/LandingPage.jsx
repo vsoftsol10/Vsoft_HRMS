@@ -29,11 +29,11 @@ const LandingPage = () => {
   const handleEmployeeAccess = (accessType) => {
     switch(accessType) {
       case 'admin':
-        navigation("/admin/dashboard");
+        navigation("/admin/login");
         console.log('Navigating to Admin Dashboard');
         break;
       case 'employee':
-        navigation("/employee/dashboard");
+        navigation("/employee/login");
         console.log('Navigating to Employee Dashboard');
         break;
       default:
@@ -96,7 +96,7 @@ const LandingPage = () => {
       {showEmployeeModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div className="modal-header">
+            <div className="modal-header" >
               <h3>Employee Portal Access</h3>
               <button className="close-btn" onClick={closeModal}>
                 &times;

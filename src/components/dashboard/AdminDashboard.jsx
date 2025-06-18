@@ -1,201 +1,21 @@
 import React, { useState } from 'react';
-import { User, Lock, Eye, EyeOff, X } from 'lucide-react';
+import { User, Bell, Search } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginData, setLoginData] = useState({
-    username: '',
-    password: ''
-  });
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    // Simple validation - in real app, you'd authenticate with backend
-    if (loginData.username === 'admin' && loginData.password === 'admin01') {
-      setIsLoggedIn(true);
+  const [currentUser] = useState('Admin'); // This would come from your auth context/state
+  
+  const handleLogout = () => {
+    // In a real app, you would clear authentication tokens and redirect to login
+    if (window.confirm('Are you sure you want to logout?')) {
+      alert('Logged out successfully! Redirecting to login page...');
+      // window.location.href = '/login';
     }
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setLoginData({ username: '', password: '' });
+  const handleNavigation = (section) => {
+    // In a real app, you would handle routing here
+    console.log(`Navigating to: ${section}`);
   };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setLoginData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  if (!isLoggedIn) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '40px',
-          width: '100%',
-          maxWidth: '420px',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-          animation: 'slideUp 0.3s ease-out'
-        }}>
-          <div style={{
-            textAlign: 'center',
-            marginBottom: '30px'
-          }}>
-            <h2 style={{
-              color: '#2e3a59',
-              fontSize: '24px',
-              fontWeight: '600',
-              marginBottom: '8px'
-            }}>HRMS Admin Login</h2>
-            <p style={{
-              color: '#666',
-              fontSize: '14px'
-            }}>Please sign in to access the dashboard</p>
-          </div>
-          
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                color: '#333',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>Username</label>
-              <div style={{ position: 'relative' }}>
-                <User style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#666'
-                }} size={20} />
-                <input
-                  type="text"
-                  name="username"
-                  placeholder="Enter your username"
-                  value={loginData.username}
-                  onChange={handleInputChange}
-                  style={{
-                    width: '100%',
-                    padding: '12px 12px 12px 45px',
-                    border: '2px solid #e1e5e9',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    outline: 'none',
-                    transition: 'border-color 0.3s ease',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#3f51b5'}
-                  onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
-                />
-              </div>
-            </div>
-            
-            <div style={{ marginBottom: '25px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                color: '#333',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>Password</label>
-              <div style={{ position: 'relative' }}>
-                <Lock style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#666'
-                }} size={20} />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Enter your password"
-                  value={loginData.password}
-                  onChange={handleInputChange}
-                  style={{
-                    width: '100%',
-                    padding: '12px 45px 12px 45px',
-                    border: '2px solid #e1e5e9',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    outline: 'none',
-                    transition: 'border-color 0.3s ease',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#3f51b5'}
-                  onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#666',
-                    padding: '0'
-                  }}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-            
-            <button 
-              type="submit"
-              style={{
-                width: '100%',
-                padding: '14px',
-                backgroundColor: '#3f51b5',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'background-color 0.3s ease',
-                marginBottom: '20px'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#303f9f'}
-              onMouseOut={(e) => e.target.style.backgroundColor = '#3f51b5'}
-            >
-              Sign In
-            </button>
-          </form>
-            
-          <div style={{ textAlign: 'center' }}>
-            <a href="#" style={{
-              color: '#3f51b5',
-              textDecoration: 'none',
-              fontSize: '14px'
-            }}>Forgot Password?</a>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div style={{
@@ -204,6 +24,7 @@ const AdminDashboard = () => {
       fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       backgroundColor: '#f8f9fa'
     }}>
+      {/* Sidebar */}
       <aside style={{
         width: '260px',
         backgroundColor: '#2e3a59',
@@ -230,12 +51,20 @@ const AdminDashboard = () => {
         
         <nav style={{ flex: 1, padding: '20px 0' }}>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-            {['Dashboard', 'Employees', 'Attendance', 'Leaves', 'Payroll', 'Intern Portal', 'Settings'].map((item, index) => (
-              <li key={item} style={{
+            {[
+              { name: 'Dashboard', active: true },
+              { name: 'Employees',link: '/employee/profile' },
+              { name: 'Attendance' },
+              { name: 'Leaves' },
+              { name: 'Payroll', link: '/payrollAdmin' },
+              { name: 'Intern Portal' },
+              { name: 'Settings' }
+            ].map((item, index) => (
+              <li key={item.name} style={{
                 margin: '4px 0'
               }}>
-                {item === 'Payroll' ? (
-                  <a href="/payrollAdmin" style={{
+                {item.link ? (
+                  <a href={item.link} style={{
                     display: 'block',
                     padding: '14px 25px',
                     color: 'white',
@@ -243,21 +72,44 @@ const AdminDashboard = () => {
                     fontSize: '15px',
                     transition: 'all 0.3s ease',
                     borderLeft: '4px solid transparent'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.backgroundColor = 'rgba(255, 202, 40, 0.1)';
+                    e.target.style.borderLeft = '4px solid #ffca28';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.borderLeft = '4px solid transparent';
                   }}>
-                    {item}
+                    {item.name}
                   </a>
                 ) : (
-                  <span style={{
-                    display: 'block',
-                    padding: '14px 25px',
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    transition: 'all 0.3s ease',
-                    borderLeft: index === 0 ? '4px solid #ffca28' : '4px solid transparent',
-                    backgroundColor: index === 0 ? 'rgba(255, 202, 40, 0.1)' : 'transparent',
-                    color: index === 0 ? '#ffca28' : 'white'
-                  }}>
-                    {item}
+                  <span 
+                    onClick={() => handleNavigation(item.name)}
+                    style={{
+                      display: 'block',
+                      padding: '14px 25px',
+                      cursor: 'pointer',
+                      fontSize: '15px',
+                      transition: 'all 0.3s ease',
+                      borderLeft: item.active ? '4px solid #ffca28' : '4px solid transparent',
+                      backgroundColor: item.active ? 'rgba(255, 202, 40, 0.1)' : 'transparent',
+                      color: item.active ? '#ffca28' : 'white'
+                    }}
+                    onMouseOver={(e) => {
+                      if (!item.active) {
+                        e.target.style.backgroundColor = 'rgba(255, 202, 40, 0.1)';
+                        e.target.style.borderLeft = '4px solid #ffca28';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (!item.active) {
+                        e.target.style.backgroundColor = 'transparent';
+                        e.target.style.borderLeft = '4px solid transparent';
+                      }
+                    }}
+                  >
+                    {item.name}
                   </span>
                 )}
               </li>
@@ -291,11 +143,13 @@ const AdminDashboard = () => {
         </div>
       </aside>
 
+      {/* Main Content */}
       <main style={{
         marginLeft: '260px',
         padding: '30px',
         flex: 1
       }}>
+        {/* Header */}
         <header style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -309,25 +163,90 @@ const AdminDashboard = () => {
               color: '#2e3a59',
               marginBottom: '5px',
               fontWeight: '600'
-            }}>Welcome, Admin</h1>
+            }}>Welcome, {currentUser}</h1>
             <p style={{
               color: '#666',
               fontSize: '16px',
               margin: 0
             }}>Here's a quick overview of your system</p>
           </div>
-          <div style={{
-            backgroundColor: '#3f51b5',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}>
-            Admin Portal
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            {/* Search Bar */}
+            <div style={{ position: 'relative' }}>
+              <Search style={{
+                position: 'absolute',
+                left: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#666'
+              }} size={18} />
+              <input
+                type="text"
+                placeholder="Search..."
+                style={{
+                  padding: '8px 12px 8px 40px',
+                  border: '1px solid #e1e5e9',
+                  borderRadius: '20px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  width: '200px',
+                  transition: 'border-color 0.3s ease'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#3f51b5'}
+                onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
+              />
+            </div>
+            
+            {/* Notifications */}
+            <button style={{
+              position: 'relative',
+              padding: '8px',
+              backgroundColor: 'white',
+              border: '1px solid #e1e5e9',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#f8f9fa';
+              e.target.style.borderColor = '#3f51b5';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = 'white';
+              e.target.style.borderColor = '#e1e5e9';
+            }}>
+              <Bell size={18} color="#666" />
+              <span style={{
+                position: 'absolute',
+                top: '-2px',
+                right: '-2px',
+                width: '8px',
+                height: '8px',
+                backgroundColor: '#f44336',
+                borderRadius: '50%'
+              }}></span>
+            </button>
+            
+            {/* Admin Badge */}
+            <div style={{
+              backgroundColor: '#3f51b5',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '20px',
+              fontSize: '14px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <User size={16} />
+              Admin Portal
+            </div>
           </div>
         </header>
 
+        {/* Stats Cards */}
         <section style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
@@ -335,10 +254,10 @@ const AdminDashboard = () => {
           marginBottom: '40px'
         }}>
           {[
-            { title: 'Total Employees', value: '48', icon: '👥', color: '#3f51b5' },
-            { title: 'Active Interns', value: '12', icon: '🎓', color: '#4caf50' },
-            { title: 'Pending Leaves', value: '6', icon: '📅', color: '#ff9800' },
-            { title: 'Payroll Pending', value: '3', icon: '💰', color: '#f44336' }
+            { title: 'Total Employees', value: '48', icon: '👥', color: '#3f51b5', change: '+5%' },
+            { title: 'Active Interns', value: '12', icon: '🎓', color: '#4caf50', change: '+12%' },
+            { title: 'Pending Leaves', value: '6', icon: '📅', color: '#ff9800', change: '-8%' },
+            { title: 'Payroll Pending', value: '3', icon: '💰', color: '#f44336', change: 'Due Today' }
           ].map((card, index) => (
             <div key={index} style={{
               backgroundColor: 'white',
@@ -370,9 +289,9 @@ const AdminDashboard = () => {
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'flex-start'
               }}>
-                <div>
+                <div style={{ flex: 1 }}>
                   <h3 style={{
                     fontSize: '14px',
                     color: '#666',
@@ -385,9 +304,15 @@ const AdminDashboard = () => {
                     fontSize: '32px',
                     color: card.color,
                     fontWeight: '700',
-                    margin: 0,
+                    margin: '0 0 8px 0',
                     lineHeight: '1'
                   }}>{card.value}</p>
+                  {/* <span style={{
+                    fontSize: '12px',
+                    color: card.change.includes('+') ? '#4caf50' : 
+                           card.change.includes('-') ? '#f44336' : '#666',
+                    fontWeight: '500'
+                  }}>{card.change}</span> */}
                 </div>
                 <div style={{
                   fontSize: '32px',
@@ -398,6 +323,7 @@ const AdminDashboard = () => {
           ))}
         </section>
 
+        {/* Recent Activity */}
         <section style={{
           backgroundColor: 'white',
           borderRadius: '12px',
@@ -445,14 +371,21 @@ const AdminDashboard = () => {
               { icon: '✅', text: 'John marked attendance', time: '2 hours ago', type: 'success' },
               { icon: '📝', text: 'Priya applied for leave', time: '4 hours ago', type: 'info' },
               { icon: '📄', text: 'Kumar generated payslip', time: '6 hours ago', type: 'warning' },
-              { icon: '📢', text: 'Intern feedback submitted', time: '1 day ago', type: 'info' }
+              { icon: '🎓', text: 'New intern onboarded', time: '8 hours ago', type: 'success' },
+              { icon: '📢', text: 'System maintenance scheduled', time: '1 day ago', type: 'info' }
             ].map((activity, index) => (
               <div key={index} style={{
                 display: 'flex',
                 alignItems: 'center',
                 padding: '15px 0',
-                borderBottom: index < 3 ? '1px solid #f0f0f0' : 'none'
-              }}>
+                borderBottom: index < 4 ? '1px solid #f0f0f0' : 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+                borderRadius: '6px',
+                margin: '0 -10px'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                 <div style={{
                   width: '40px',
                   height: '40px',
@@ -463,7 +396,8 @@ const AdminDashboard = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: '15px',
-                  fontSize: '16px'
+                  fontSize: '16px',
+                  marginLeft: '10px'
                 }}>
                   {activity.icon}
                 </div>

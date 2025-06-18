@@ -268,6 +268,7 @@ body {
   align-items: center;
   padding: 24px 24px 16px 24px;
   border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #6d478f, #8300b1) !important ;
 }
 
 .modal-header h3 {
@@ -275,6 +276,7 @@ body {
   font-size: 1.5rem;
   font-weight: 600;
   color: #ffffff;
+
 }
 
 .close-btn {
@@ -282,7 +284,7 @@ body {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #f0d1ff;
+  color: #edd7f8 !important;
   padding: 4px;
   width: 35px;
   border-radius: 50%;
@@ -290,8 +292,8 @@ body {
 }
 
 .close-btn:hover {
-  background-color: #f3f4f6;
-  color: #374151;
+  background-color: #f3f4f6 !important;
+  color: #022763 !important;
 }
 
 .modal-body {
