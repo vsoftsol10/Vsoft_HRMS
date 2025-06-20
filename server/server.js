@@ -911,3 +911,810 @@ app.put('/api/profile/:employeeCode', async (req, res) => {
     res.status(500).json({ message: 'Error updating profile', error: error.message });
   }
 });
+
+
+
+// Attendance API Routes
+
+// Add these attendance API routes to your existing server.js file
+
+// Helper function to calculate total hours from clock_in and clock_out
+function calculateTotalHours(clockIn, clockOut, breakStart = null, breakEnd = null) {
+  if (!clockIn || !clockOut) return 0;
+  
+  const [inHours, inMinutes] = clockIn.split(':').map(Number);
+  const [outHours, outMinutes] = clockOut.split(':').map(Number);
+  
+  const clockInMinutes = inHours * 60 + inMinutes;
+  const clockOutMinutes = outHours * 60 + outMinutes;
+  
+  let totalMinutes = clockOutMinutes - clockInMinutes;
+  
+  // Subtract break time if provided
+  if (breakStart && breakEnd) {
+    const [breakStartHours, breakStartMinutes] = breakStart.split(':').map(Number);
+    const [breakEndHours, breakEndMinutes] = breakEnd.split(':').map(Number);
+    
+    const breakStartMin = breakStartHours * 60 + breakStartMinutes;
+    const breakEndMin = breakEndHours * 60 + breakEndMinutes;
+    
+    const breakDuration = breakEndMin - breakStartMin;
+    totalMinutes -= breakDuration;
+  }
+  
+  return Math.max(0, totalMinutes / 60);
+}
+
+// Create attendance table if it doesn't exist
+async function initializeAttendanceTable() {
+  try {
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS attendance (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        employee_id VARCHAR(50) NOT NULL,
+        date DATE NOT NULL,
+        clock_in TIME,
+        clock_out TIME,
+        break_start TIME,
+        break_end TIME,
+        total_hours DECIMAL(4,2) DEFAULT 0,
+        break_hours DECIMAL(4,2) DEFAULT 0,
+        overtime_hours DECIMAL(4,2) DEFAULT 0,
+        late_minutes INT DEFAULT 0,
+        early_leaving_minutes INT DEFAULT 0,
+        status ENUM('present', 'absent', 'late', 'half-day', 'sick', 'leave') DEFAULT 'present',
+        work_from_home BOOLEAN DEFAULT FALSE,
+        location VARCHAR(255),
+        notes TEXT,
+        is_approved BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_employee_date (employee_id, date),
+        INDEX idx_employee_date (employee_id, date)
+      )
+    `;
+    
+    await pool.execute(createTableQuery);
+    console.log('✅ Attendance table created/verified successfully!');
+  } catch (error) {
+    console.error('❌ Error creating attendance table:', error.message);
+  }
+}
+
+// Call this function after your existing initializeDatabase() call
+// initializeAttendanceTable();
+
+// ATTENDANCE API ROUTES
+
+// Get attendance data for a specific month and employee
+app.get('/api/attendance/:employeeId/:year/:month', async (req, res) => {
+  try {
+    const { employeeId, year, month } = req.params;
+    
+    const query = `
+      SELECT 
+        id,
+        date,
+        clock_in,
+        clock_out,
+        break_start,
+        break_end,
+        total_hours,
+        break_hours,
+        overtime_hours,
+        late_minutes,
+        early_leaving_minutes,
+        status,
+        work_from_home,
+        location,
+        notes,
+        is_approved
+      FROM attendance 
+      WHERE employee_id = ? 
+        AND YEAR(date) = ? 
+        AND MONTH(date) = ?
+      ORDER BY date
+    `;
+    
+    const [rows] = await pool.execute(query, [employeeId, year, month]);
+    
+    // Convert rows to object with date as key
+    const attendanceData = {};
+    rows.forEach(row => {
+      const dateKey = row.date.toISOString().split('T')[0];
+      attendanceData[dateKey] = {
+        id: row.id,
+        clockIn: row.clock_in,
+        clockOut: row.clock_out,
+        breakStart: row.break_start,
+        breakEnd: row.break_end,
+        totalHours: parseFloat(row.total_hours || 0),
+        breakHours: parseFloat(row.break_hours || 0),
+        overtimeHours: parseFloat(row.overtime_hours || 0),
+        lateMinutes: row.late_minutes || 0,
+        earlyLeavingMinutes: row.early_leaving_minutes || 0,
+        status: row.status,
+        workFromHome: row.work_from_home,
+        location: row.location,
+        notes: row.notes,
+        isApproved: row.is_approved
+      };
+    });
+    
+    res.json({
+      success: true,
+      data: attendanceData
+    });
+  } catch (error) {
+    console.error('Error fetching attendance data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch attendance data',
+      error: error.message
+    });
+  }
+});
+
+// Create or update attendance record
+app.post('/api/attendance', async (req, res) => {
+  try {
+    const {
+      employeeId,
+      date,
+      clockIn,
+      clockOut,
+      breakStart,
+      breakEnd,
+      status = 'present',
+      workFromHome = false,
+      location,
+      notes
+    } = req.body;
+
+    // Calculate total hours
+    const totalHours = calculateTotalHours(clockIn, clockOut, breakStart, breakEnd);
+    
+    // Calculate break hours
+    let breakHours = 0;
+    if (breakStart && breakEnd) {
+      breakHours = calculateTotalHours(breakStart, breakEnd);
+    }
+
+    const query = `
+      INSERT INTO attendance (
+        employee_id, date, clock_in, clock_out, break_start, break_end,
+        total_hours, break_hours, status, work_from_home, location, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        clock_in = VALUES(clock_in),
+        clock_out = VALUES(clock_out),
+        break_start = VALUES(break_start),
+        break_end = VALUES(break_end),
+        total_hours = VALUES(total_hours),
+        break_hours = VALUES(break_hours),
+        status = VALUES(status),
+        work_from_home = VALUES(work_from_home),
+        location = VALUES(location),
+        notes = VALUES(notes),
+        updated_at = CURRENT_TIMESTAMP
+    `;
+
+    const [result] = await pool.execute(query, [
+      employeeId, date, clockIn, clockOut, breakStart, breakEnd,
+      totalHours, breakHours, status, workFromHome, location, notes
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Attendance record saved successfully',
+      data: {
+        id: result.insertId || result.affectedRows,
+        totalHours
+      }
+    });
+  } catch (error) {
+    console.error('Error saving attendance:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to save attendance record',
+      error: error.message
+    });
+  }
+});
+
+// Update attendance record by ID
+app.put('/api/attendance/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      clockIn,
+      clockOut,
+      breakStart,
+      breakEnd,
+      status,
+      workFromHome,
+      location,
+      notes
+    } = req.body;
+
+    // Calculate total hours
+    const totalHours = calculateTotalHours(clockIn, clockOut, breakStart, breakEnd);
+    
+    // Calculate break hours
+    let breakHours = 0;
+    if (breakStart && breakEnd) {
+      breakHours = calculateTotalHours(breakStart, breakEnd);
+    }
+
+    const query = `
+      UPDATE attendance SET
+        clock_in = ?,
+        clock_out = ?,
+        break_start = ?,
+        break_end = ?,
+        total_hours = ?,
+        break_hours = ?,
+        status = ?,
+        work_from_home = ?,
+        location = ?,
+        notes = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+
+    const [result] = await pool.execute(query, [
+      clockIn, clockOut, breakStart, breakEnd, totalHours, breakHours,
+      status, workFromHome, location, notes, id
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Attendance record not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Attendance record updated successfully',
+      data: { totalHours }
+    });
+  } catch (error) {
+    console.error('Error updating attendance:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update attendance record',
+      error: error.message
+    });
+  }
+});
+
+// Delete attendance record
+app.delete('/api/attendance/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const query = 'DELETE FROM attendance WHERE id = ?';
+    const [result] = await pool.execute(query, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Attendance record not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Attendance record deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting attendance:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete attendance record',
+      error: error.message
+    });
+  }
+});
+
+// Get monthly summary
+app.get('/api/attendance/summary/:employeeId/:year/:month', async (req, res) => {
+  try {
+    const { employeeId, year, month } = req.params;
+    
+    const query = `
+      SELECT 
+        COUNT(*) as total_days,
+        SUM(total_hours) as total_hours,
+        AVG(total_hours) as average_hours,
+        SUM(CASE WHEN total_hours >= 9 THEN 1 ELSE 0 END) as complete_days,
+        SUM(CASE WHEN total_hours > 0 AND total_hours < 9 THEN 1 ELSE 0 END) as insufficient_days,
+        SUM(overtime_hours) as total_overtime,
+        SUM(late_minutes) as total_late_minutes
+      FROM attendance 
+      WHERE employee_id = ? 
+        AND YEAR(date) = ? 
+        AND MONTH(date) = ?
+        AND status IN ('present', 'late', 'half-day')
+    `;
+    
+    const [rows] = await pool.execute(query, [employeeId, year, month]);
+    const summary = rows[0];
+    
+    res.json({
+      success: true,
+      data: {
+        totalDays: summary.total_days || 0,
+        totalHours: parseFloat(summary.total_hours || 0),
+        averageHours: parseFloat(summary.average_hours || 0),
+        completeDays: summary.complete_days || 0,
+        insufficientDays: summary.insufficient_days || 0,
+        totalOvertime: parseFloat(summary.total_overtime || 0),
+        totalLateMinutes: summary.total_late_minutes || 0
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching summary:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch summary data',
+      error: error.message
+    });
+  }
+});
+
+// Get all employees for attendance (simplified version of your existing employees endpoint)
+app.get('/api/attendance/employees', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        employee_code as id, 
+        CONCAT(first_name, ' ', last_name) as name,
+        first_name, 
+        last_name, 
+        personal_email as email 
+      FROM employees 
+      WHERE status = 'active'
+      ORDER BY first_name, last_name
+    `;
+    const [rows] = await pool.execute(query);
+    
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('Error fetching employees for attendance:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch employees',
+      error: error.message
+    });
+  }
+});
+
+
+// Geofencing Backend API Extensions
+// Add these to your existing server.js file
+
+// Create geofencing-related tables
+async function initializeGeofencingTables() {
+  try {
+    // Work locations table
+    const createLocationsTable = `
+      CREATE TABLE IF NOT EXISTS work_locations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        address TEXT,
+        latitude DECIMAL(10, 8) NOT NULL,
+        longitude DECIMAL(11, 8) NOT NULL,
+        radius_meters INT DEFAULT 100,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `;
+
+    // Update attendance table to include location data
+    const alterAttendanceTable = `
+      ALTER TABLE attendance 
+      ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 8),
+      ADD COLUMN IF NOT EXISTS longitude DECIMAL(11, 8),
+      ADD COLUMN IF NOT EXISTS location_accuracy DECIMAL(6, 2),
+      ADD COLUMN IF NOT EXISTS is_within_geofence BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS work_location_id INT,
+      ADD COLUMN IF NOT EXISTS distance_from_work DECIMAL(8, 2),
+      ADD FOREIGN KEY IF NOT EXISTS (work_location_id) REFERENCES work_locations(id)
+    `;
+
+    await pool.execute(createLocationsTable);
+    console.log('✅ Work locations table created successfully!');
+    
+    // Note: ALTER TABLE with IF NOT EXISTS might not work in all MySQL versions
+    // You might need to check if columns exist first
+    try {
+      await pool.execute(alterAttendanceTable);
+      console.log('✅ Attendance table updated with location fields!');
+    } catch (error) {
+      if (!error.message.includes('Duplicate column')) {
+        console.error('❌ Error updating attendance table:', error.message);
+      }
+    }
+
+    // Insert default work locations (example)
+    const insertDefaultLocation = `
+      INSERT IGNORE INTO work_locations (name, address, latitude, longitude, radius_meters)
+      VALUES 
+        ('Main Office', '123 Business Street, City', 40.7128, -74.0060, 100),
+        ('Branch Office', '456 Corporate Ave, City', 40.7589, -73.9851, 150)
+    `;
+    
+    await pool.execute(insertDefaultLocation);
+    console.log('✅ Default work locations inserted!');
+
+  } catch (error) {
+    console.error('❌ Error initializing geofencing tables:', error.message);
+  }
+}
+
+// Call this after your existing initialization
+// initializeGeofencingTables();
+
+// Haversine formula to calculate distance between two points
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000; // Earth's radius in meters
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+          Math.cos(φ1) * Math.cos(φ2) *
+          Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c; // Distance in meters
+}
+
+// Check if coordinates are within any work location
+async function checkGeofence(latitude, longitude) {
+  try {
+    const query = `
+      SELECT id, name, latitude, longitude, radius_meters 
+      FROM work_locations 
+      WHERE is_active = TRUE
+    `;
+    
+    const [locations] = await pool.execute(query);
+    
+    for (const location of locations) {
+      const distance = calculateDistance(
+        latitude, longitude,
+        parseFloat(location.latitude), parseFloat(location.longitude)
+      );
+      
+      if (distance <= location.radius_meters) {
+        return {
+          isWithinGeofence: true,
+          workLocation: location,
+          distance: Math.round(distance)
+        };
+      }
+    }
+    
+    // Find closest location for reference
+    let closestLocation = null;
+    let minDistance = Infinity;
+    
+    for (const location of locations) {
+      const distance = calculateDistance(
+        latitude, longitude,
+        parseFloat(location.latitude), parseFloat(location.longitude)
+      );
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestLocation = { ...location, distance: Math.round(distance) };
+      }
+    }
+    
+    return {
+      isWithinGeofence: false,
+      closestLocation,
+      distance: Math.round(minDistance)
+    };
+    
+  } catch (error) {
+    console.error('Error checking geofence:', error);
+    throw error;
+  }
+}
+
+// GEOFENCING API ROUTES
+
+// Get all work locations
+app.get('/api/work-locations', async (req, res) => {
+  try {
+    const query = `
+      SELECT id, name, address, latitude, longitude, radius_meters, is_active
+      FROM work_locations
+      ORDER BY name
+    `;
+    
+    const [rows] = await pool.execute(query);
+    
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('Error fetching work locations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch work locations',
+      error: error.message
+    });
+  }
+});
+
+// Add new work location
+app.post('/api/work-locations', async (req, res) => {
+  try {
+    const { name, address, latitude, longitude, radiusMeters = 100 } = req.body;
+    
+    if (!name || !latitude || !longitude) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name, latitude, and longitude are required'
+      });
+    }
+    
+    const query = `
+      INSERT INTO work_locations (name, address, latitude, longitude, radius_meters)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    
+    const [result] = await pool.execute(query, [name, address, latitude, longitude, radiusMeters]);
+    
+    res.json({
+      success: true,
+      message: 'Work location added successfully',
+      data: { id: result.insertId }
+    });
+  } catch (error) {
+    console.error('Error adding work location:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to add work location',
+      error: error.message
+    });
+  }
+});
+
+// Validate location for attendance
+app.post('/api/validate-location', async (req, res) => {
+  try {
+    const { latitude, longitude, accuracy } = req.body;
+    
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        success: false,
+        message: 'Latitude and longitude are required'
+      });
+    }
+    
+    // Check if accuracy is acceptable (less than 50 meters)
+    if (accuracy && accuracy > 50) {
+      return res.json({
+        success: false,
+        message: 'Location accuracy is too low. Please try again in an open area.',
+        data: { accuracy, isAccurate: false }
+      });
+    }
+    
+    const geofenceResult = await checkGeofence(latitude, longitude);
+    
+    res.json({
+      success: true,
+      data: {
+        ...geofenceResult,
+        coordinates: { latitude, longitude },
+        accuracy,
+        isAccurate: !accuracy || accuracy <= 50
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error validating location:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to validate location',
+      error: error.message
+    });
+  }
+});
+
+// Enhanced attendance creation with geofencing
+app.post('/api/attendance-with-location', async (req, res) => {
+  try {
+    const {
+      employeeId,
+      date,
+      clockIn,
+      clockOut,
+      breakStart,
+      breakEnd,
+      status = 'present',
+      workFromHome = false,
+      location,
+      notes,
+      latitude,
+      longitude,
+      locationAccuracy
+    } = req.body;
+
+    let geofenceResult = null;
+    let isWithinGeofence = false;
+    let workLocationId = null;
+    let distanceFromWork = null;
+
+    // Only check geofence if not working from home and coordinates provided
+    if (!workFromHome && latitude && longitude) {
+      try {
+        geofenceResult = await checkGeofence(latitude, longitude);
+        isWithinGeofence = geofenceResult.isWithinGeofence;
+        
+        if (geofenceResult.workLocation) {
+          workLocationId = geofenceResult.workLocation.id;
+          distanceFromWork = geofenceResult.distance;
+        } else if (geofenceResult.closestLocation) {
+          distanceFromWork = geofenceResult.distance;
+        }
+        
+        // If not within geofence, you might want to restrict attendance
+        if (!isWithinGeofence && !workFromHome) {
+          return res.status(400).json({
+            success: false,
+            message: `You are ${distanceFromWork}m away from the nearest work location. Please move closer to clock in.`,
+            data: {
+              geofenceInfo: geofenceResult,
+              requiredDistance: geofenceResult.closestLocation?.radius_meters || 100
+            }
+          });
+        }
+        
+      } catch (geofenceError) {
+        console.error('Geofence check failed:', geofenceError);
+        // Continue without geofence if there's an error
+      }
+    }
+
+    // Calculate total hours
+    const totalHours = calculateTotalHours(clockIn, clockOut, breakStart, breakEnd);
+    
+    // Calculate break hours
+    let breakHours = 0;
+    if (breakStart && breakEnd) {
+      breakHours = calculateTotalHours(breakStart, breakEnd);
+    }
+
+    const query = `
+      INSERT INTO attendance (
+        employee_id, date, clock_in, clock_out, break_start, break_end,
+        total_hours, break_hours, status, work_from_home, location, notes,
+        latitude, longitude, location_accuracy, is_within_geofence,
+        work_location_id, distance_from_work
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        clock_in = VALUES(clock_in),
+        clock_out = VALUES(clock_out),
+        break_start = VALUES(break_start),
+        break_end = VALUES(break_end),
+        total_hours = VALUES(total_hours),
+        break_hours = VALUES(break_hours),
+        status = VALUES(status),
+        work_from_home = VALUES(work_from_home),
+        location = VALUES(location),
+        notes = VALUES(notes),
+        latitude = VALUES(latitude),
+        longitude = VALUES(longitude),
+        location_accuracy = VALUES(location_accuracy),
+        is_within_geofence = VALUES(is_within_geofence),
+        work_location_id = VALUES(work_location_id),
+        distance_from_work = VALUES(distance_from_work),
+        updated_at = CURRENT_TIMESTAMP
+    `;
+
+    const [result] = await pool.execute(query, [
+      employeeId, date, clockIn, clockOut, breakStart, breakEnd,
+      totalHours, breakHours, status, workFromHome, location, notes,
+      latitude, longitude, locationAccuracy, isWithinGeofence,
+      workLocationId, distanceFromWork
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Attendance record saved successfully',
+      data: {
+        id: result.insertId || result.affectedRows,
+        totalHours,
+        geofenceInfo: geofenceResult,
+        isWithinGeofence
+      }
+    });
+  } catch (error) {
+    console.error('Error saving attendance with location:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to save attendance record',
+      error: error.message
+    });
+  }
+});
+
+// Get attendance with location data
+app.get('/api/attendance-with-location/:employeeId/:year/:month', async (req, res) => {
+  try {
+    const { employeeId, year, month } = req.params;
+    
+    const query = `
+      SELECT 
+        a.*,
+        wl.name as work_location_name,
+        wl.address as work_location_address
+      FROM attendance a
+      LEFT JOIN work_locations wl ON a.work_location_id = wl.id
+      WHERE a.employee_id = ? 
+        AND YEAR(a.date) = ? 
+        AND MONTH(a.date) = ?
+      ORDER BY a.date
+    `;
+    
+    const [rows] = await pool.execute(query, [employeeId, year, month]);
+    
+    // Convert rows to object with date as key
+    const attendanceData = {};
+    rows.forEach(row => {
+      const dateKey = row.date.toISOString().split('T')[0];
+      attendanceData[dateKey] = {
+        id: row.id,
+        clockIn: row.clock_in,
+        clockOut: row.clock_out,
+        breakStart: row.break_start,
+        breakEnd: row.break_end,
+        totalHours: parseFloat(row.total_hours || 0),
+        breakHours: parseFloat(row.break_hours || 0),
+        overtimeHours: parseFloat(row.overtime_hours || 0),
+        lateMinutes: row.late_minutes || 0,
+        earlyLeavingMinutes: row.early_leaving_minutes || 0,
+        status: row.status,
+        workFromHome: row.work_from_home,
+        location: row.location,
+        notes: row.notes,
+        isApproved: row.is_approved,
+        // Location data
+        latitude: row.latitude,
+        longitude: row.longitude,
+        locationAccuracy: row.location_accuracy,
+        isWithinGeofence: row.is_within_geofence,
+        workLocationId: row.work_location_id,
+        workLocationName: row.work_location_name,
+        workLocationAddress: row.work_location_address,
+        distanceFromWork: row.distance_from_work
+      };
+    });
+    
+    res.json({
+      success: true,
+      data: attendanceData
+    });
+  } catch (error) {
+    console.error('Error fetching attendance with location:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch attendance data',
+      error: error.message
+    });
+  }
+});

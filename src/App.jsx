@@ -13,6 +13,7 @@ import EmployeeLogin from './pages/login/EmployeeLogin'
 import AdminLogin from './pages/login/AdminLogin'
 import EmployeeProfile from './components/employee/EmployeeProfile'
 import MyProfile from './components/employee/MyProfile'
+import AttendanceCalendar from './components/attendance/AttendanceCalendar'
 
 
 
@@ -27,6 +28,7 @@ const employeeCode = 'VSEMP03';
       <Route path='/employee/dashboard' element={<EmployeeDashboard/>} />
       <Route path="/profile/:employeeId" element={<MyProfile />} />
       <Route path='/employee/profile' element={<EmployeeProfile/>} />
+      <Route path='/employee/calendar' element={<AttendanceCalendar/>} />
       <Route path='/dashboard' element={<InternPortal/>} />
       <Route path='/payslip/:id' element={<PayrollPage/>} />
       <Route path='/payrollAdmin' element={<PayrollAdmin/>} />
