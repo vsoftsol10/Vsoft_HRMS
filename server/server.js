@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 const app = express();
-const PORT = 8000;
+const PORT = process.env.PORT ||5000;
 
 app.use(cors());
 app.use(express.json());
@@ -72,6 +72,58 @@ async function initializeDatabase() {
 
 // Initialize database
 initializeDatabase();
+
+// Add this route handler before your other routes or after your existing routes
+// This should go before app.listen()
+
+// Root route - API Status endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'VSOFT HRMS API Server is running successfully!',
+    status: 'active',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    endpoints: [
+      'GET /api/payroll - Fetch all payrolls',
+      'GET /api/payroll/:id - Fetch single payroll',
+      'POST /api/payroll - Create new payroll',
+      'PUT /api/payroll/:id - Update payroll',
+      'DELETE /api/payroll/:id - Delete payroll',
+      'POST /api/authenticate - Employee authentication',
+      'GET /api/employee/:employeeId/dashboard - Employee dashboard',
+      'GET /api/employees - Fetch all employees',
+      'GET /api/employees/:id - Fetch single employee',
+      'POST /api/employees - Create new employee',
+      'PUT /api/employees/:id - Update employee',
+      'DELETE /api/employees/:id - Delete employee',
+      'GET /api/departments - Fetch departments',
+      'GET /api/positions - Fetch positions',
+      'GET /api/managers - Fetch managers',
+      'GET /api/profile/:employeeCode - Fetch employee profile',
+      'PUT /api/profile/:employeeCode - Update employee profile'
+    ]
+  });
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// API info endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'VSOFT HRMS API',
+    version: '1.0.0',
+    documentation: 'API endpoints for HRMS system',
+    base_url: req.protocol + '://' + req.get('host')
+  });
+});
+
 
 // GET API - Fetch all payrolls
 app.get('/api/payroll', async (req, res) => {
