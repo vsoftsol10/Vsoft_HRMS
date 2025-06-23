@@ -52,7 +52,7 @@ const EmployeeProfile = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/employees');
+      const response = await fetch('https://vsoft-hrms-1.onrender.com/api/employees');
       const data = await response.json();
       setEmployees(data);
     } catch (error) {
@@ -65,9 +65,9 @@ const EmployeeProfile = () => {
   const fetchDropdownData = async () => {
     try {
       const [deptRes, posRes, manRes] = await Promise.all([
-        fetch('http://localhost:8000/api/departments'),
-        fetch('http://localhost:8000/api/positions'),
-        fetch('http://localhost:8000/api/managers')
+        fetch('https://vsoft-hrms-1.onrender.com/api/departments'),
+        fetch('https://vsoft-hrms-1.onrender.com/api/positions'),
+        fetch('https://vsoft-hrms-1.onrender.com/api/managers')
       ]);
       
       const [deptData, posData, manData] = await Promise.all([
@@ -177,8 +177,8 @@ const EmployeeProfile = () => {
     
     try {
       const url = isEditing 
-        ? `http://localhost:8000/api/employees/${currentEmployee.id}`
-        : 'http://localhost:8000/api/employees';
+        ? `https://vsoft-hrms-1.onrender.com/api/employees/${currentEmployee.id}`
+        : 'https://vsoft-hrms-1.onrender.com/api/employees';
       
       const method = isEditing ? 'PUT' : 'POST';
       
