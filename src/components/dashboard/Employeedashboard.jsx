@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import "./EmployeeDashboard.css"
+import "./EmployeeDashboard1.css"
 import { useNavigate } from 'react-router-dom';
 
 const EmployeeDashboard = () => {
@@ -20,12 +20,13 @@ const EmployeeDashboard = () => {
       navigate('/login');
     }
   }, [navigate]);
+
   // Handle navigation to My Profile
-const handleMyProfileClick = () => {
-  if (employeeInfo && employeeInfo.employeeId) {
-    navigate(`/profile/${employeeInfo.employeeId}`);
-  }
-};
+  const handleMyProfileClick = () => {
+    if (employeeInfo && employeeInfo.employeeId) {
+      navigate(`/profile/${employeeInfo.employeeId}`);
+    }
+  };
 
   const handleLogout = () => {
     // Clear stored data
@@ -38,8 +39,8 @@ const handleMyProfileClick = () => {
 
   if (isLoading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">Loading...</div>
+      <div className="emp-loading-container">
+        <div className="emp-loading-spinner">Loading...</div>
       </div>
     );
   }
@@ -49,71 +50,71 @@ const handleMyProfileClick = () => {
   }
 
   return (
-    <div className="employee-dashboard">
-      <aside className="sidebar">
-        <div className="sidebar-header">
+    <div className="emp-employee-dashboard">
+      <aside className="emp-sidebar">
+        <div className="emp-sidebar-header">
           <h2>HRMS Portal</h2>
-          <span className="employee-badge">Employee</span>
+          <span className="emp-employee-badge">Employee</span>
         </div>
-        <nav className="sidebar-nav">
+        <nav className="emp-sidebar-nav">
           <ul>
-            <li className="nav-item active">
-              <span className="nav-icon">📊</span>
+            <li className="emp-nav-item emp-active">
+              <span className="emp-nav-icon">📊</span>
               Dashboard
             </li>
-            <li className="nav-item" onClick={handleMyProfileClick}>
-              <span className="nav-icon">👤</span>
+            <li className="emp-nav-item" onClick={handleMyProfileClick}>
+              <span className="emp-nav-icon">👤</span>
               My Profile
             </li>
-            <li className="nav-item">
-              <span className="nav-icon">🕒</span>
+            <li className="emp-nav-item">
+              <span className="emp-nav-icon">🕒</span>
               Attendance
             </li>
-            <li className="nav-item">
-              <span className="nav-icon">📝</span>
+            <li className="emp-nav-item">
+              <span className="emp-nav-icon">📝</span>
               Leave Requests
             </li>
             <li
-              className="nav-item"
+              className="emp-nav-item"
               onClick={() => navigate(`/payslip/${employeeInfo.id}`)}
             >
-              <span className="nav-icon">💰</span>
+              <span className="emp-nav-icon">💰</span>
               Payslips
             </li>
-            <li className="nav-item">
-              <span className="nav-icon">📋</span>
+            <li className="emp-nav-item">
+              <span className="emp-nav-icon">📋</span>
               Policies
             </li>
           </ul>
         </nav>
-        <div className="sidebar-footer">
-          <div className="employee-info">
-            <div className="employee-avatar">
+        <div className="emp-sidebar-footer">
+          <div className="emp-employee-info">
+            <div className="emp-employee-avatar">
               {employeeInfo.name.charAt(0).toUpperCase()}
             </div>
-            <div className="employee-details">
-              <span className="employee-name">{employeeInfo.name}</span>
-              <span className="employee-id">ID: {employeeInfo.employeeId}</span>
+            <div className="emp-employee-details">
+              <span className="emp-employee-name">{employeeInfo.name}</span>
+              <span className="emp-employee-id">ID: {employeeInfo.employeeId}</span>
             </div>
           </div>
-          <button onClick={handleLogout} className="logout-btn">
-            <span className="nav-icon">🚪</span>
+          <button onClick={handleLogout} className="emp-logout-btn">
+            <span className="emp-nav-icon">🚪</span>
             Logout
           </button>
         </div>
       </aside>
 
-      <main className="dashboard-main">
-        <header className="dashboard-header">
-          <div className="header-content">
+      <main className="emp-dashboard-main">
+        <header className="emp-dashboard-header">
+          <div className="emp-header-content">
             <h1>Welcome back, {employeeInfo.name}! 👋</h1>
-            <div className="employee-meta">
-              {/* <span className="employee-position">{employeeInfo.position}</span> */}
-              {/* <span className="employee-department">{employeeInfo.department}</span> */}
+            <div className="emp-employee-meta">
+              {/* <span className="emp-employee-position">{employeeInfo.position}</span> */}
+              {/* <span className="emp-employee-department">{employeeInfo.department}</span> */}
             </div>
           </div>
-          <div className="header-actions">
-            <div className="current-time">
+          <div className="emp-header-actions">
+            <div className="emp-current-time">
               {new Date().toLocaleDateString("en-US", {
                 weekday: "long",
                 year: "numeric",
@@ -121,38 +122,38 @@ const handleMyProfileClick = () => {
                 day: "numeric",
               })}
             </div>
-            <button className="clock-in-btn">Clock In</button>
+            <button className="emp-clock-in-btn">Clock In</button>
           </div>
         </header>
 
-        <section className="dashboard-cards">
-          <div className="dashboard-card present-days">
-            <div className="card-icon">📅</div>
-            <div className="card-content">
+        <section className="emp-dashboard-cards">
+          <div className="emp-dashboard-card emp-present-days">
+            <div className="emp-card-icon">📅</div>
+            <div className="emp-card-content">
               <h3>Present Days</h3>
               <p>18</p>
-              <span className="card-subtitle">This month</span>
+              <span className="emp-card-subtitle">This month</span>
             </div>
           </div>
-          <div className="dashboard-card leaves-taken">
-            <div className="card-icon">🏖️</div>
-            <div className="card-content">
+          <div className="emp-dashboard-card emp-leaves-taken">
+            <div className="emp-card-icon">🏖️</div>
+            <div className="emp-card-content">
               <h3>Leaves Taken</h3>
               <p>2</p>
-              <span className="card-subtitle">This month</span>
+              <span className="emp-card-subtitle">This month</span>
             </div>
           </div>
-          <div className="dashboard-card upcoming-holidays">
-            <div className="card-icon">🎉</div>
-            <div className="card-content">
+          <div className="emp-dashboard-card emp-upcoming-holidays">
+            <div className="emp-card-icon">🎉</div>
+            <div className="emp-card-content">
               <h3>Upcoming Holidays</h3>
               <p>3</p>
-              <span className="card-subtitle">Next 30 days</span>
+              <span className="emp-card-subtitle">Next 30 days</span>
             </div>
           </div>
-          <div className="dashboard-card last-payslip">
-            <div className="card-icon">💸</div>
-            <div className="card-content">
+          <div className="emp-dashboard-card emp-last-payslip">
+            <div className="emp-card-icon">💸</div>
+            <div className="emp-card-content">
               <h3>Last Payslip</h3>
               <p>
                 ₹
@@ -160,72 +161,72 @@ const handleMyProfileClick = () => {
                   ? employeeInfo.lastSalary.toLocaleString()
                   : "45,000"}
               </p>
-              <span className="card-subtitle">Last month</span>
+              <span className="emp-card-subtitle">Last month</span>
             </div>
           </div>
         </section>
 
-        <div className="dashboard-content">
-          <section className="recent-activity">
-            <div className="section-header">
+        <div className="emp-dashboard-content">
+          <section className="emp-recent-activity">
+            <div className="emp-section-header">
               <h2>Recent Updates</h2>
-              <button className="view-all-btn">View All</button>
+              <button className="emp-view-all-btn">View All</button>
             </div>
-            <div className="activity-list">
-              <div className="activity-item">
-                <div className="activity-icon success">✅</div>
-                <div className="activity-content">
+            <div className="emp-activity-list">
+              <div className="emp-activity-item">
+                <div className="emp-activity-icon emp-success">✅</div>
+                <div className="emp-activity-content">
                   <h4>Attendance Marked</h4>
                   <p>Successfully marked attendance for today</p>
-                  <span className="activity-time">2 hours ago</span>
+                  <span className="emp-activity-time">2 hours ago</span>
                 </div>
               </div>
-              <div className="activity-item">
-                <div className="activity-icon approved">✅</div>
-                <div className="activity-content">
+              <div className="emp-activity-item">
+                <div className="emp-activity-icon emp-approved">✅</div>
+                <div className="emp-activity-content">
                   <h4>Leave Request Approved</h4>
                   <p>Your leave request for June 20-22 has been approved</p>
-                  <span className="activity-time">1 day ago</span>
+                  <span className="emp-activity-time">1 day ago</span>
                 </div>
               </div>
-              <div className="activity-item">
-                <div className="activity-icon info">📄</div>
-                <div className="activity-content">
+              <div className="emp-activity-item">
+                <div className="emp-activity-icon emp-info">📄</div>
+                <div className="emp-activity-content">
                   <h4>Payslip Available</h4>
                   <p>Latest payslip is ready for download</p>
-                  <span className="activity-time">3 days ago</span>
+                  <span className="emp-activity-time">3 days ago</span>
                 </div>
               </div>
-              <div className="activity-item">
-                <div className="activity-icon holiday">🎉</div>
-                <div className="activity-content">
+              <div className="emp-activity-item">
+                <div className="emp-activity-icon emp-holiday">🎉</div>
+                <div className="emp-activity-content">
                   <h4>Holiday Announcement</h4>
                   <p>Company holiday scheduled for June 15, 2024</p>
-                  <span className="activity-time">1 week ago</span>
+                  <span className="emp-activity-time">1 week ago</span>
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="quick-actions">
-            <div className="section-header">
+          <section className="emp-quick-actions">
+            <div className="emp-section-header">
               <h2>Quick Actions</h2>
             </div>
-            <div className="actions-grid">
-              <button className="action-btn">
-                <span className="action-icon">📝</span>
+            <div className="emp-actions-grid">
+              <button className="emp-action-btn">
+                <span className="emp-action-icon">📝</span>
                 <span>Apply Leave</span>
               </button>
-              <button className="action-btn">
-                <span className="action-icon">📊</span>
+              <button className="emp-action-btn">
+                <span className="emp-action-icon">📊</span>
                 <span>View Reports</span>
               </button>
-              <button className="action-btn">
-                <span className="action-icon">💬</span>
+              <button className="emp-action-btn">
+                <span className="emp-action-icon">💬</span>
                 <span>Contact HR</span>
               </button>
-              <button className="action-btn">
-                <span className="action-icon">⚙️</span>
+              <button className="emp-action-btn">
+                <span className="emp-action-icon">⚙️</span>
                 <span>Settings</span>
               </button>
             </div>

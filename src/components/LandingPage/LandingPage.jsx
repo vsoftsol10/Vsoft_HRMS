@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const LandingPage = () => {
   const navigation = useNavigate();
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  const [showLearningModal,setShowLearningModal] = useState(false);
 
   const handleNavigation = (portal) => {
     switch(portal) {
@@ -18,7 +19,7 @@ const LandingPage = () => {
         console.log('Navigating to Non Employee Portal');
         break;
       case 'learning':
-        navigation("/intern/dashboard");
+        setShowLearningModal(true);
         console.log('Navigating to Learning Portal');
         break;
       default:
@@ -42,8 +43,25 @@ const LandingPage = () => {
     setShowEmployeeModal(false);
   };
 
+  const handleLearning =(acesstype)=>{
+    switch(acesstype) {
+      case 'course':
+        navigation("/learn/course");
+        console.log('Navigating to Course Dashboard')
+        break;
+      case 'intern' :
+        navigation ("/intern/dashboard");
+        console.log('Navigating to intern dashboard')
+        break;
+      default:
+        break;
+    }
+    setShowLearningModal(false);
+  }
+
   const closeModal = () => {
     setShowEmployeeModal(false);
+    setShowLearningModal(false)
   };
 
   return (
@@ -126,6 +144,49 @@ const LandingPage = () => {
                   <div className="access-info">
                     <h4>Employee Access</h4>
                     <p>Standard employee dashboard</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Learning Portal Modal */}
+      {showLearningModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header" >
+              <h3>Learning Portal</h3>
+              <button className="close-btn" onClick={closeModal}>
+                &times;
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <p>Please choose yours to get trained:</p>
+              
+              <div className="access-buttons">
+                <button 
+                  className="access-btn admin-access-btn"
+                  onClick={() => handleLearning('course')}
+                >
+                  <div className="access-icon">🎓</div>
+                  <div className="access-info">
+                    <h4>Course</h4>
+                    <p>Course Platform</p>
+                  </div>
+                </button>
+                
+                <button 
+                  className="access-btn employee-access-btn"
+                  onClick={() => handleLearning('intern')}
+                >
+                  <div className="access-icon">👥</div>
+                  <div className="access-info">
+                    <h4>Internship</h4>
+                    <p>Internship Training</p>
                   </div>
                 </button>
               </div>
