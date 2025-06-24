@@ -9,11 +9,11 @@ app.use(express.json());
 
 // MySQL Database Configuration
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',     // Replace with your MySQL username
-  password: 'SimeDarby@9095', // Replace with your MySQL password
-  database: 'hrms_systems',          // Replace with your database name
-  port: 3306
+  host: process.env.HOST,
+  user: process.env.USER,     // Replace with your MySQL username
+  password: process.env.PASSWORD, // Replace with your MySQL password
+  database: process.env.DATABASE,          // Replace with your database name
+  port: process.env.DB_PORT,
 };
 
 // Create MySQL connection pool
