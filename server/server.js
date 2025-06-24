@@ -9,10 +9,10 @@ app.use(express.json());
 
 // MySQL Database Configuration
 const dbConfig = {
-  host: process.env.HOST,
-  user: process.env.USER,     // Replace with your MySQL username
-  password: process.env.PASSWORD, // Replace with your MySQL password
-  database: process.env.DATABASE,          // Replace with your database name
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,     // Replace with your MySQL username
+  password: process.env.DB_PASSWORD, // Replace with your MySQL password
+  database: process.env.DB_NAME,          // Replace with your database name
   port: process.env.DB_PORT,
 };
 
