@@ -24,7 +24,7 @@ const EmployeeLogin = () => {
 
     try {
       // Call your backend API to authenticate the employee
-      const response = await fetch('https://vsoft-hrms-1.onrender.com/api/authenticate', {
+      const response = await fetch('http://localhost:8000/api/authenticate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

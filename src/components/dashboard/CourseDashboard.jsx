@@ -1,151 +1,195 @@
-import React, { useState } from 'react';
-import { ChevronRight, Clock, Users, Award, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronRight, Clock, Users, Award, X, Loader } from 'lucide-react';
 import "./CourseDashboard1.css"
 import logo from "../../assets/logo1.png"
 
 const CourseDashboard = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const courses = [
-    {
-      id: 1,
-      title: "Cloud Computing",
-      icon: "☁️",
-      platforms: ["AWS", "Azure", "Google Cloud Platform"],
-      description: "Master cloud technologies with hands-on experience across major platforms",
-      duration: "12 weeks",
-      students: "500+",
-      level: "Intermediate",
-      topics: [
-        "AWS EC2, S3, Lambda",
-        "Azure Virtual Machines & Storage",
-        "Google Cloud Compute Engine",
-        "Cloud Security & Best Practices",
-        "DevOps & CI/CD",
-        "Serverless Architecture"
-      ],
-      features: [
-        "Real-time project experience",
-        "Industry certification preparation",
-        "Placement support for top performers"
-      ]
-    },
-    {
-      id: 2,
-      title: "SAP BASIS Administration",
-      icon: "🔧",
-      platforms: ["SAP HANA", "Complete BASIS Training"],
-      description: "Comprehensive SAP BASIS administration with HANA DB expertise",
-      duration: "10 weeks",
-      students: "200+",
-      level: "Advanced",
-      topics: [
-        "Understanding SAP & Cloud",
-        "Complete BASIS training",
-        "Introduction to HANA DB Administration",
-        "System Administration",
-        "Performance Tuning",
-        "Security Management"
-      ],
-      features: [
-        "Hands-on SAP environment",
-        "Real-world scenarios",
-        "Expert instructor guidance"
-      ]
-    },
-    {
-      id: 3,
-      title: "Mobile App Development",
-      icon: "📱",
-      platforms: ["Java", "Firebase", "React Native", "Android & iOS"],
-      description: "Build cross-platform mobile applications from scratch",
-      duration: "14 weeks",
-      students: "800+",
-      level: "Beginner to Advanced",
-      topics: [
-        "Java Programming Fundamentals",
-        "Firebase Backend Services",
-        "React Native Development",
-        "Native Android Development",
-        "iOS Development Basics",
-        "App Store Deployment"
-      ],
-      features: [
-        "Build 3+ complete apps",
-        "App store publication guidance",
-        "Industry mentorship"
-      ]
-    },
-    {
-      id: 4,
-      title: "Full Stack Web Development",
-      icon: "🌐",
-      platforms: ["HTML & CSS", "JavaScript", "React", "Node.js"],
-      description: "Complete web development from frontend to backend",
-      duration: "16 weeks",
-      students: "1000+",
-      level: "Beginner to Advanced",
-      topics: [
-        "HTML5 & CSS3 Fundamentals",
-        "Modern JavaScript (ES6+)",
-        "React.js & Component Architecture",
-        "Node.js & Express.js",
-        "Database Integration",
-        "API Development & Testing"
-      ],
-      features: [
-        "Build complete web applications",
-        "Version control with Git",
-        "Deployment strategies"
-      ]
-    },
-    {
-      id: 5,
-      title: "Digital Marketing",
-      icon: "📈",
-      platforms: ["Social Media", "Google Ads", "WhatsApp Marketing"],
-      description: "Master digital marketing strategies and tools",
-      duration: "8 weeks",
-      students: "600+",
-      level: "Beginner",
-      topics: [
-        "Social Media Marketing",
-        "Google Ads & PPC Campaigns",
-        "WhatsApp Business Marketing",
-        "Content Strategy",
-        "Analytics & Reporting",
-        "SEO Fundamentals"
-      ],
-      features: [
-        "Live campaign management",
-        "Industry case studies",
-        "Certification preparation"
-      ]
-    },
-    {
-      id: 6,
-      title: "Graphic Designing",
-      icon: "🎨",
-      platforms: ["Canva Premium", "Figma"],
-      description: "Create professional designs for all industries",
-      duration: "6 weeks",
-      students: "400+",
-      level: "Beginner to Intermediate",
-      topics: [
-        "Canva Premium Features",
-        "Figma Design Principles",
-        "Typography & Color Theory",
-        "Brand Identity Design",
-        "Social Media Graphics",
-        "Print Design Basics"
-      ],
-      features: [
-        "Portfolio development",
-        "Industry-specific templates",
-        "Creative project assignments"
-      ]
+  // API base URL - adjust this to match your backend URL
+  const API_BASE_URL =  'http://localhost:8000/api';
+
+  // Fetch courses from backend
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/courses`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setCourses(data.data);
+      } else {
+        throw new Error(data.message || 'Failed to fetch courses');
+      }
+    } catch (err) {
+      console.error('Error fetching courses:', err);
+      setError(err.message);
+      
+      // Fallback to hardcoded data if API fails
+      const fallbackCourses = [
+        {
+          id: 1,
+          title: "Cloud Computing",
+          icon: "☁️",
+          platforms: ["Google Cloud Platform"],
+          description: "Master cloud technologies with hands-on experience across major platforms",
+          duration: "4 weeks",
+          students: "50+",
+          level: "Intermediate",
+          topics: [
+            "Basics of GCP",
+            "GCP Virtual Machines & Storage",
+            "Google Cloud Compute Engine",
+            "Cloud Security & Best Practices",
+            "DevOps & CI/CD",
+            "Serverless Architecture"
+          ],
+          features: [
+            "Real-time working experience",
+            "Industry certification preparation",
+            "Placement support for top performers"
+          ]
+        },
+        {
+          id: 2,
+          title: "SAP BASIS Administration",
+          icon: "🔧",
+          platforms: ["SAP HANA", "Complete BASIS Training"],
+          description: "Comprehensive SAP BASIS administration with HANA DB expertise",
+          duration: "11 weeks",
+          students: "50+",
+          level: "Advanced",
+          topics: [
+            "Understanding SAP & Cloud",
+            "Complete BASIS training",
+            "Introduction to HANA DB Administration",
+            "System Administration",
+            "Performance Tuning",
+            "Security Management"
+          ],
+          features: [
+            "Hands-on SAP environment",
+            "Real-world scenarios",
+            "Expert instructor guidance"
+          ]
+        },
+        {
+          id: 3,
+          title: "Mobile App Development",
+          icon: "📱",
+          platforms: ["Java", "Firebase", "React Native", "Android & iOS"],
+          description: "Build cross-platform mobile applications from scratch",
+          duration: "4 weeks",
+          students: "800+",
+          level: "Beginner to Advanced",
+          topics: [
+            "Firebase Backend Services",
+            "React Native Development",
+            "Native Android Development",
+            "iOS Development Basics",
+            "App Store Deployment"
+          ],
+          features: [
+            "Build 1+ complete apps",
+            "App store publication guidance",
+            "Industry mentorship"
+          ]
+        },
+        {
+          id: 4,
+          title: "Full Stack Web Development",
+          icon: "🌐",
+          platforms: ["HTML & CSS", "JavaScript", "React", "Node.js"],
+          description: "Complete web development from frontend to backend",
+          duration: "8 weeks",
+          students: "1000+",
+          level: "Beginner to Advanced",
+          topics: [
+            "HTML5 & CSS3 Fundamentals",
+            "Modern JavaScript (ES6+)",
+            "React.js & Component Architecture",
+            "Node.js & Express.js",
+            "Database Integration",
+            "API Development & Testing"
+          ],
+          features: [
+            "Build complete web applications",
+            "Version control with Git",
+            "Deployment strategies"
+          ]
+        },
+        {
+          id: 5,
+          title: "Digital Marketing",
+          icon: "📈",
+          platforms: ["Social Media", "Google Ads", "WhatsApp Marketing"],
+          description: "Master digital marketing strategies and tools",
+          duration: "8 weeks",
+          students: "600+",
+          level: "Beginner",
+          topics: [
+            "Social Media Marketing",
+            "Google Ads & PPC Campaigns",
+            "WhatsApp Business Marketing",
+            "Content Strategy",
+            "Analytics & Reporting",
+            "SEO Fundamentals"
+          ],
+          features: [
+            "Live campaign management",
+            "Industry case studies",
+            "Certification preparation"
+          ]
+        },
+        {
+          id: 6,
+          title: "Graphic Designing",
+          icon: "🎨",
+          platforms: ["Canva Premium", "Figma"],
+          description: "Create professional designs for all industries",
+          duration: "6 weeks",
+          students: "400+",
+          level: "Beginner to Intermediate",
+          topics: [
+            "Canva Premium Features",
+            "Figma Design Principles",
+            "Typography & Color Theory",
+            "Brand Identity Design",
+            "Social Media Graphics",
+            "Print Design Basics"
+          ],
+          features: [
+            "Portfolio development",
+            "Industry-specific templates",
+            "Creative project assignments"
+          ]
+        }
+      ];
+      setCourses(fallbackCourses);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  // Fetch courses on component mount
+  useEffect(() => {
+    fetchCourses();
+  }, []);
 
   const openCourseDetails = (course) => {
     setSelectedCourse(course);
@@ -155,18 +199,80 @@ const CourseDashboard = () => {
     setSelectedCourse(null);
   };
 
+  // Handle enrollment (you can customize this)
+  const handleEnrollment = (courseId) => {
+    // Add your enrollment logic here
+    console.log(`Enrolling in course ${courseId}`);
+    alert(`Enrollment initiated for ${selectedCourse.title}. Please contact us for more details.`);
+  };
+
+  // Handle contact us (you can customize this)
+  const handleContactUs = () => {
+    // Add your contact logic here
+    alert('Redirecting to contact form...');
+  };
+
+  if (loading) {
+    return (
+      <div className="course-dashboard">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          flexDirection: 'column',
+          gap: '1rem'
+        }}>
+          <Loader size={48} className="animate-spin" />
+          <p>Loading courses...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="course-dashboard">
       {/* Header */}
-     <header className="dashboard-header">         
-  <div className="logo-section">           
-    <div className="company-logo">             
-      <span><img src={logo} alt="Logo" style={{width:'100%'}} /></span>           
-    </div>         
-  </div>           
-  {/* <h1 className='header'>Course Dashboard</h1> */}
-  <div className="spacer"></div>       
-</header>
+      <header className="dashboard-header">         
+        <div className="logo-section">           
+          <div className="company-logo">             
+            <span><img src={logo} alt="Logo" style={{width:'100%'}} /></span>           
+          </div>         
+        </div>           
+        <div className="spacer"></div>       
+        <div className='headerText'>
+          <h2>Learning Today for a Smarter Tomorrow</h2>
+        </div>
+      </header>
+
+      {/* Error Message */}
+      {error && (
+        <div style={{
+          backgroundColor: '#fee2e2',
+          border: '1px solid #fecaca',
+          color: '#dc2626',
+          padding: '1rem',
+          margin: '1rem',
+          borderRadius: '0.5rem',
+          textAlign: 'center'
+        }}>
+          <p>⚠️ Using offline data. Could not connect to server: {error}</p>
+          <button 
+            onClick={fetchCourses}
+            style={{
+              marginTop: '0.5rem',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#dc2626',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
 
       {/* Courses Section */}
       <main className="dashboard-main">
@@ -183,7 +289,7 @@ const CourseDashboard = () => {
               </div>
               <h3 className="course-title">{course.title}</h3>
               <div className="course-platforms">
-                {course.platforms.map((platform, index) => (
+                {course.platforms && course.platforms.map((platform, index) => (
                   <span key={index} className="platform-tag">{platform}</span>
                 ))}
               </div>
@@ -249,7 +355,7 @@ const CourseDashboard = () => {
                 <div className="detail-section">
                   <h3>Course Topics</h3>
                   <ul className="topics-list">
-                    {selectedCourse.topics.map((topic, index) => (
+                    {selectedCourse.topics && selectedCourse.topics.map((topic, index) => (
                       <li key={index}>{topic}</li>
                     ))}
                   </ul>
@@ -258,7 +364,7 @@ const CourseDashboard = () => {
                 <div className="detail-section">
                   <h3>Key Features</h3>
                   <ul className="features-list">
-                    {selectedCourse.features.map((feature, index) => (
+                    {selectedCourse.features && selectedCourse.features.map((feature, index) => (
                       <li key={index}>{feature}</li>
                     ))}
                   </ul>
@@ -267,7 +373,7 @@ const CourseDashboard = () => {
                 <div className="detail-section">
                   <h3>Technologies</h3>
                   <div className="tech-tags">
-                    {selectedCourse.platforms.map((platform, index) => (
+                    {selectedCourse.platforms && selectedCourse.platforms.map((platform, index) => (
                       <span key={index} className="tech-tag">{platform}</span>
                     ))}
                   </div>
@@ -276,8 +382,18 @@ const CourseDashboard = () => {
             </div>
 
             <div className="modal-footer">
-              <button className="enroll-btn">Enroll Now</button>
-              <button className="contact-btn">Contact Us</button>
+              <button 
+                className="enroll-btn" 
+                onClick={() => handleEnrollment(selectedCourse.id)}
+              >
+                Enroll Now
+              </button>
+              <button 
+                className="contact-btn" 
+                onClick={handleContactUs}
+              >
+                Contact Us
+              </button>
             </div>
           </div>
         </div>

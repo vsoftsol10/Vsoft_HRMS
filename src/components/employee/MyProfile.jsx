@@ -191,7 +191,7 @@ useEffect(() => {
           /> */}
           <div className="profile-basic-info">
             <h1>{employeeData.fullName}</h1>
-            <p className="employee-id">Employee ID: {employeeData.employeeId}</p>
+            <p className="employee-id" style={{color:"white", opacity:"1"}}>Employee ID: {employeeData.employeeId}</p>
             <p className="job-title">{employeeData.jobTitle}</p>
             <span className={`status-badge ${employeeData.employeeStatus.toLowerCase()}`}>
               {employeeData.employeeStatus}
