@@ -2,9 +2,16 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
-const app = express();
+
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const { body, validationResult } = require('express-validator');
 const PORT = process.env.PORT ||5000;
 
+const app = express();
 app.use(cors());
 app.use(express.json());
 
@@ -2113,4 +2120,451 @@ app.delete('/:id', async (req, res) => {
       error: error.message
     });
   }
+});
+
+
+
+
+
+/**************************************/
+
+// Security middleware
+app.use(helmet());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+
+// Rate limiting
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per IP
+  message: { error: 'Too many authentication attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many requests from this IP, please try again later.' }
+});
+
+app.use('/api/auth', authLimiter);
+app.use('/api', generalLimiter);
+
+
+
+// Email configuration
+const emailTransporter = nodemailer.createTransporter({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+
+// Utility functions
+const generateToken = () => {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+};
+
+const generateJWT = (payload) => {
+  return jwt.sign(payload, process.env.JWT_SECRET || 'your-secret-key', {
+    expiresIn: '24h'
+  });
+};
+
+const sendEmail = async (to, subject, html) => {
+  try {
+    await emailTransporter.sendMail({
+      from: process.env.FROM_EMAIL || 'noreply@internportal.com',
+      to,
+      subject,
+      html
+    });
+    return true;
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    return false;
+  }
+};
+
+// Validation middleware
+const validateSignUp = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email address'),
+  body('password')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+  body('fullName')
+    .isLength({ min: 2, max: 50 })
+    .matches(/^[A-Za-z\s\-']+$/)
+    .withMessage('Full name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes'),
+  body('employeeId')
+    .isLength({ min: 4, max: 12 })
+    .isAlphanumeric()
+    .withMessage('Employee ID must be 4-12 alphanumeric characters'),
+];
+
+const validateSignIn = [
+  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email address'),
+  body('password').notEmpty().withMessage('Password is required')
+];
+
+// Middleware to verify JWT
+const authenticateToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid or expired token' });
+  }
+};
+
+// Routes
+
+// 1. Sign Up Route
+app.post('/api/auth/register', validateSignUp, async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: errors.array() 
+      });
+    }
+
+    const { email, password, fullName, employeeId } = req.body;
+
+    // Check if user already exists
+    const [existingUsers] = await pool.execute(
+      'SELECT id FROM interns WHERE email = ? OR employee_id = ?',
+      [email, employeeId]
+    );
+
+    if (existingUsers.length > 0) {
+      return res.status(409).json({ 
+        error: 'User with this email or employee ID already exists' 
+      });
+    }
+
+    // Hash password
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    // Generate verification token
+    const verificationToken = generateToken();
+
+    // Insert new user
+    const [result] = await pool.execute(
+      `INSERT INTO interns (employee_id, full_name, email, password_hash, verification_token) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [employeeId, fullName, email, passwordHash, verificationToken]
+    );
+
+    // Send verification email
+    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+    const emailSent = await sendEmail(
+      email,
+      'Verify Your Intern Portal Account',
+      `
+        <h2>Welcome to Intern Portal!</h2>
+        <p>Hi ${fullName},</p>
+        <p>Thank you for registering. Please click the link below to verify your email address:</p>
+        <a href="${verificationLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+        <p>If the button doesn't work, copy and paste this link: ${verificationLink}</p>
+        <p>This link will expire in 24 hours.</p>
+      `
+    );
+
+    res.status(201).json({
+      message: 'Account created successfully! Please check your email for verification.',
+      userId: result.insertId,
+      emailSent
+    });
+
+  } catch (error) {
+    console.error('Sign up error:', error);
+    res.status(500).json({ error: 'Internal server error during registration' });
+  }
+});
+
+// 2. Sign In Route
+app.post('/api/auth/login', validateSignIn, async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: errors.array() 
+      });
+    }
+
+    const { email, password } = req.body;
+    const clientIp = req.ip || req.connection.remoteAddress;
+
+    // Get user from database
+    const [users] = await pool.execute(
+      'SELECT id, employee_id, full_name, email, password_hash, is_verified FROM interns WHERE email = ?',
+      [email]
+    );
+
+    if (users.length === 0) {
+      // Log failed attempt
+      await pool.execute(
+        'INSERT INTO login_attempts (email, ip_address, success) VALUES (?, ?, ?)',
+        [email, clientIp, false]
+      );
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const user = users[0];
+
+    // Check if account is verified
+    if (!user.is_verified) {
+      return res.status(401).json({ error: 'Please verify your email address before signing in' });
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isValidPassword) {
+      // Log failed attempt
+      await pool.execute(
+        'INSERT INTO login_attempts (email, ip_address, success) VALUES (?, ?, ?)',
+        [email, clientIp, false]
+      );
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Generate JWT token
+    const token = generateJWT({
+      userId: user.id,
+      email: user.email,
+      employeeId: user.employee_id
+    });
+
+    // Update last login
+    await pool.execute(
+      'UPDATE interns SET last_login = NOW() WHERE id = ?',
+      [user.id]
+    );
+
+    // Log successful attempt
+    await pool.execute(
+      'INSERT INTO login_attempts (email, ip_address, success) VALUES (?, ?, ?)',
+      [email, clientIp, true]
+    );
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        employeeId: user.employee_id,
+        fullName: user.full_name,
+        email: user.email
+      }
+    });
+
+  } catch (error) {
+    console.error('Sign in error:', error);
+    res.status(500).json({ error: 'Internal server error during login' });
+  }
+});
+
+// 3. Forgot Password Route
+app.post('/api/auth/forgot-password', [
+  body('email').isEmail().normalizeEmail()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Please provide a valid email address' });
+    }
+
+    const { email } = req.body;
+
+    // Check if user exists
+    const [users] = await pool.execute(
+      'SELECT id, full_name FROM interns WHERE email = ?',
+      [email]
+    );
+
+    // Always return success to prevent email enumeration
+    res.json({ message: 'If an account with that email exists, we have sent a password reset link.' });
+
+    if (users.length > 0) {
+      const user = users[0];
+      const resetToken = generateToken();
+      const resetExpires = new Date(Date.now() + 3600000); // 1 hour
+
+      // Save reset token
+      await pool.execute(
+        'UPDATE interns SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
+        [resetToken, resetExpires, user.id]
+      );
+
+      // Send reset email
+      const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+      await sendEmail(
+        email,
+        'Reset Your Intern Portal Password',
+        `
+          <h2>Password Reset Request</h2>
+          <p>Hi ${user.full_name},</p>
+          <p>We received a request to reset your password. Click the link below to reset it:</p>
+          <a href="${resetLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
+          <p>If the button doesn't work, copy and paste this link: ${resetLink}</p>
+          <p>This link will expire in 1 hour.</p>
+          <p>If you didn't request this reset, please ignore this email.</p>
+        `
+      );
+    }
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 4. Reset Password Route
+app.post('/api/auth/reset-password', [
+  body('token').notEmpty().withMessage('Reset token is required'),
+  body('password')
+    .isLength({ min: 8 })
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .withMessage('Password must meet security requirements')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: errors.array() 
+      });
+    }
+
+    const { token, password } = req.body;
+
+    // Find user with valid reset token
+    const [users] = await pool.execute(
+      'SELECT id FROM interns WHERE reset_token = ? AND reset_token_expires > NOW()',
+      [token]
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    const user = users[0];
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Update password and clear reset token
+    await pool.execute(
+      'UPDATE interns SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
+      [passwordHash, user.id]
+    );
+
+    res.json({ message: 'Password reset successful' });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 5. Email Verification Route
+app.get('/api/auth/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Verification token is required' });
+    }
+
+    // Find user with verification token
+    const [users] = await pool.execute(
+      'SELECT id, email FROM interns WHERE verification_token = ?',
+      [token]
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({ error: 'Invalid verification token' });
+    }
+
+    const user = users[0];
+
+    // Update user as verified
+    await pool.execute(
+      'UPDATE interns SET is_verified = TRUE, verification_token = NULL WHERE id = ?',
+      [user.id]
+    );
+
+    res.json({ message: 'Email verified successfully' });
+
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 6. Get User Profile (Protected Route)
+app.get('/api/user/profile', authenticateToken, async (req, res) => {
+  try {
+    const [users] = await pool.execute(
+      'SELECT id, employee_id, full_name, email, created_at, last_login FROM interns WHERE id = ?',
+      [req.user.userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ user: users[0] });
+
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Error handling middleware
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
