@@ -12,7 +12,10 @@ const { body, validationResult } = require('express-validator');
 const PORT = process.env.PORT ||5000;
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // or your frontend URL
+  credentials: true}
+));
 app.use(express.json());
 
 // MySQL Database Configuration
@@ -2131,7 +2134,7 @@ app.delete('/:id', async (req, res) => {
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -2157,7 +2160,7 @@ app.use('/api', generalLimiter);
 
 
 // Email configuration
-const emailTransporter = nodemailer.createTransporter({
+const emailTransporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT || 587,
   secure: false,
@@ -2208,10 +2211,7 @@ const validateSignUp = [
     .isLength({ min: 2, max: 50 })
     .matches(/^[A-Za-z\s\-']+$/)
     .withMessage('Full name must be 2-50 characters and contain only letters, spaces, hyphens, and apostrophes'),
-  body('employeeId')
-    .isLength({ min: 4, max: 12 })
-    .isAlphanumeric()
-    .withMessage('Employee ID must be 4-12 alphanumeric characters'),
+
 ];
 
 const validateSignIn = [
@@ -2250,36 +2250,34 @@ app.post('/api/auth/register', validateSignUp, async (req, res) => {
       });
     }
 
-    const { email, password, fullName, employeeId } = req.body;
+    const { email, password, fullName } = req.body;
 
-    // Check if user already exists
+    // ✅ Check if user already exists by email only
     const [existingUsers] = await pool.execute(
-      'SELECT id FROM interns WHERE email = ? OR employee_id = ?',
-      [email, employeeId]
+      'SELECT id FROM interns WHERE email = ?', [email]
     );
-
     if (existingUsers.length > 0) {
       return res.status(409).json({ 
-        error: 'User with this email or employee ID already exists' 
+        error: 'User with this email already exists' 
       });
     }
 
-    // Hash password
+    // ✅ Hash password
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Generate verification token
+    // ✅ Generate verification token
     const verificationToken = generateToken();
 
-    // Insert new user
+    // ✅ Insert new user
     const [result] = await pool.execute(
-      `INSERT INTO interns (employee_id, full_name, email, password_hash, verification_token) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [employeeId, fullName, email, passwordHash, verificationToken]
+      `INSERT INTO interns (full_name, email, password_hash, verification_token) 
+       VALUES (?, ?, ?, ?)`,
+      [fullName, email, passwordHash, verificationToken]
     );
 
-    // Send verification email
-    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+    // ✅ Send verification email
+    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
     const emailSent = await sendEmail(
       email,
       'Verify Your Intern Portal Account',
@@ -2287,7 +2285,9 @@ app.post('/api/auth/register', validateSignUp, async (req, res) => {
         <h2>Welcome to Intern Portal!</h2>
         <p>Hi ${fullName},</p>
         <p>Thank you for registering. Please click the link below to verify your email address:</p>
-        <a href="${verificationLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+        <a href="${verificationLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+          Verify Email
+        </a>
         <p>If the button doesn't work, copy and paste this link: ${verificationLink}</p>
         <p>This link will expire in 24 hours.</p>
       `
@@ -2304,6 +2304,7 @@ app.post('/api/auth/register', validateSignUp, async (req, res) => {
     res.status(500).json({ error: 'Internal server error during registration' });
   }
 });
+
 
 // 2. Sign In Route
 app.post('/api/auth/login', validateSignIn, async (req, res) => {
@@ -2564,7 +2565,7 @@ app.use('*', (req, res) => {
 });
 
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+//   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+// });

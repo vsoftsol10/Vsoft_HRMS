@@ -50,7 +50,7 @@ const LandingPage = () => {
         console.log('Navigating to Course Dashboard')
         break;
       case 'intern' :
-        navigation ("/intern/dashboard");
+        navigation ("/intern/login");
         console.log('Navigating to intern dashboard')
         break;
       default:

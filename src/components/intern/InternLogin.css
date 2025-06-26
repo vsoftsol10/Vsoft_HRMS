@@ -3,7 +3,8 @@
 /* Main Container */
 .login-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  min-width: 100vw;
+  background: linear-gradient(135deg, #a763a2 0%, #9c4e98 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,19 +22,33 @@
 
 /* Header Styles */
 .header {
-  text-align: center;
-  margin-bottom: 2rem;
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin: 0;
+    color: #f8f9fa;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 2rem;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+.logoPic{
+  width: 100%;
 }
 
 .logo-container {
   margin: 0 auto 1rem auto;
-  width: 4rem;
+  width: 10rem;
   height: 4rem;
   background: #e0e7ff;
-  border-radius: 50%;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+
 }
 
 .logo-icon {
@@ -45,13 +60,20 @@
 .title {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #111827;
+  color: #ffffff;
   margin: 0 0 0.5rem 0;
+  text-align: center;
+  font-family: "Bitter";
+  letter-spacing: 1.5px;
 }
 
 .subtitle {
-  color: #6b7280;
+  color: #b1b2b3;
   margin: 0;
+  text-align: center;
+  font-family: "Satisfy";
+  font-size: 1.5rem;
+  letter-spacing: 1px;
 }
 
 /* Tab Switcher */
@@ -76,7 +98,7 @@
 
 .tab-active {
   background: white;
-  color: #4f46e5;
+  color: #a91ceb;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
@@ -181,7 +203,7 @@
 .input:focus {
   outline: none;
   border-color: transparent;
-  box-shadow: 0 0 0 2px #4f46e5;
+  box-shadow: 0 0 0 2px #980bbb;
 }
 
 .input:disabled {
@@ -311,7 +333,7 @@
 /* Button Styles */
 .submit-button {
   width: 100%;
-  background: #4f46e5;
+  background: #70336d;
   color: white;
   font-weight: 500;
   padding: 0.75rem 1rem;
@@ -326,7 +348,7 @@
 }
 
 .submit-button:hover:not(:disabled) {
-  background: #4338ca;
+  background: #6c2488;
 }
 
 .submit-button:disabled {
@@ -354,16 +376,16 @@
   width: 100%;
   background: none;
   border: none;
-  color: #4f46e5;
+  color: #000000;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 700;
   padding: 0.5rem;
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .forgot-password-button:hover:not(:disabled) {
-  color: #4338ca;
+  color: #444444;
 }
 
 .forgot-password-button:disabled {
@@ -384,8 +406,8 @@
 }
 
 .footer-link {
-  color: #4f46e5;
-  font-weight: 500;
+  color: #030303;
+  font-weight: 800;
   background: none;
   border: none;
   cursor: pointer;
@@ -393,7 +415,7 @@
 }
 
 .footer-link:hover:not(:disabled) {
-  color: #4338ca;
+  color: #474747;
 }
 
 .footer-link:disabled {

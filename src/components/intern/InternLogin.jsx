@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, User, Mail, Lock, Building, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import './InternLogin.css';
+import logo from "../../assets/logo1.png"
+import { useNavigate } from 'react-router-dom';
 
 const InternLogin = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -14,10 +16,9 @@ const InternLogin = () => {
     password: '',
     confirmPassword: '',
     fullName: '',
-    employeeId: ''
   });
-
-  const API_BASE_URL = 'http://localhost:5000/api';
+const navigate=useNavigate();
+  const API_BASE_URL = 'http://localhost:8000/api';
 
   const passwordRequirements = {
     minLength: 8,
@@ -49,10 +50,7 @@ const InternLogin = () => {
     return { strength, score, isStrong: score >= 4 };
   };
 
-  const validateEmployeeId = (id) => {
-    const idRegex = /^[A-Za-z0-9]{4,12}$/;
-    return idRegex.test(id);
-  };
+
 
   const validateFullName = (name) => {
     const nameRegex = /^[A-Za-z\s\-']{2,50}$/;
@@ -111,19 +109,7 @@ const InternLogin = () => {
           }
         }
         break;
-        
-      case 'employeeId':
-        if (isSignUp) {
-          if (!value) {
-            newErrors.employeeId = 'Employee/Intern ID is required';
-          } else if (!validateEmployeeId(value)) {
-            newErrors.employeeId = 'ID must be 4-12 alphanumeric characters';
-          } else {
-            delete newErrors.employeeId;
-          }
-        }
-        break;
-        
+                
       default:
         break;
     }
@@ -172,11 +158,7 @@ const InternLogin = () => {
         newErrors.fullName = 'Please enter a valid full name';
       }
       
-      if (!formData.employeeId) {
-        newErrors.employeeId = 'Employee/Intern ID is required';
-      } else if (!validateEmployeeId(formData.employeeId)) {
-        newErrors.employeeId = 'ID must be 4-12 alphanumeric characters';
-      }
+      
       
       if (!formData.confirmPassword) {
         newErrors.confirmPassword = 'Please confirm your password';
@@ -189,85 +171,99 @@ const InternLogin = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
-    setIsLoading(true);
-    setSuccessMessage('');
-    setErrors({});
-    
-    try {
-      const endpoint = isSignUp ? '/auth/register' : '/auth/login';
-      const payload = isSignUp 
-        ? {
-            email: formData.email,
-            password: formData.password,
-            fullName: formData.fullName,
-            employeeId: formData.employeeId
-          }
-        : {
-            email: formData.email,
-            password: formData.password
-          };
-
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        if (isSignUp) {
-          setSuccessMessage(data.message || 'Account created successfully! Please check your email for verification.');
-          setFormData({
-            email: '',
-            password: '',
-            confirmPassword: '',
-            fullName: '',
-            employeeId: ''
-          });
-        } else {
-          // Store the JWT token
-          if (data.token) {
-            localStorage.setItem('authToken', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-          }
-          setSuccessMessage('Login successful! Redirecting...');
-          
-          // Redirect to dashboard or home page
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 1500);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  console.log('Form submitted with data:', formData); // Debug log
+  
+  if (!validateForm()) {
+    console.log('Form validation failed:', errors); // Debug log
+    return;
+  }
+  
+  setIsLoading(true);
+  setSuccessMessage('');
+  setErrors({});
+  
+  try {
+    const endpoint = isSignUp ? '/auth/register' : '/auth/login';
+    const payload = isSignUp 
+      ? {
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
         }
+      : {
+          email: formData.email,
+          password: formData.password
+        };
+
+    console.log('API URL:', `${API_BASE_URL}${endpoint}`); // Debug log
+    console.log('Payload:', payload); // Debug log
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log('Response status:', response.status); // Debug log
+    console.log('Response headers:', response.headers); // Debug log
+
+    const data = await response.json();
+    console.log('Response data:', data); // Debug log
+
+    if (response.ok) {
+      // Success
+      if (isSignUp) {
+        setSuccessMessage(data.message || 'Account created successfully! Please check your email for verification.');
+        // Clear form
+        setFormData({
+          email: '',
+          password: '',
+          confirmPassword: '',
+          fullName: '',
+        });
+        navigate('/intern/dashboard')
       } else {
-        // Handle specific error responses
-        if (data.details && Array.isArray(data.details)) {
-          const fieldErrors = {};
-          data.details.forEach(detail => {
-            if (detail.path) {
-              fieldErrors[detail.path] = detail.msg;
-            }
-          });
-          setErrors(fieldErrors);
-        } else {
-          setErrors({ submit: data.error || 'An error occurred. Please try again.' });
+        // Login success - you might want to redirect or store token
+        setSuccessMessage(data.message || 'Login successful!');
+        // Store token if needed
+        if (data.token) {
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
         }
+        // Redirect or handle successful login
+        navigate('intern/dashboard')
       }
-    } catch (error) {
-      console.error('Request failed:', error);
-      setErrors({ submit: 'Network error. Please check your connection and try again.' });
-    } finally {
-      setIsLoading(false);
+    } else {
+      // Handle different types of errors
+      if (data.details && Array.isArray(data.details)) {
+        // Validation errors from express-validator
+        const validationErrors = {};
+        data.details.forEach(detail => {
+          const field = detail.path || detail.param;
+          validationErrors[field] = detail.msg;
+        });
+        setErrors(validationErrors);
+      } else if (data.error) {
+        // General error message
+        setErrors({ submit: data.error });
+      } else {
+        // Fallback error message
+        setErrors({ submit: 'An error occurred. Please try again.' });
+      }
     }
-  };
+
+  } catch (error) {
+    console.error('Request failed:', error);
+    setErrors({ submit: 'Network error. Please check your connection and try again.' });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleForgotPassword = async () => {
     if (!formData.email) {
@@ -316,7 +312,6 @@ const InternLogin = () => {
       password: '',
       confirmPassword: '',
       fullName: '',
-      employeeId: ''
     });
   };
 
@@ -340,7 +335,7 @@ const InternLogin = () => {
         {/* Header */}
         <div className="header">
           <div className="logo-container">
-            <Building className="logo-icon" />
+              <img src={logo} alt="logo" className='logoPic' />
           </div>
           <h1 className="title">Intern Portal</h1>
           <p className="subtitle">Welcome to your workspace</p>
@@ -406,27 +401,7 @@ const InternLogin = () => {
                 )}
               </div>
 
-              {/* Employee ID */}
-              <div className="input-group">
-                <div className="input-container">
-                  <Building className="input-icon" />
-                  <input
-                    type="text"
-                    name="employeeId"
-                    placeholder="Employee/Intern ID"
-                    value={formData.employeeId}
-                    onChange={handleInputChange}
-                    className={`input ${errors.employeeId ? 'input-error' : ''}`}
-                    disabled={isLoading}
-                  />
-                </div>
-                {errors.employeeId && (
-                  <p className="field-error">
-                    <AlertCircle className="error-icon" />
-                    {errors.employeeId}
-                  </p>
-                )}
-              </div>
+              
             </>
           )}
 
@@ -557,6 +532,7 @@ const InternLogin = () => {
             type="submit"
             disabled={isLoading}
             className="submit-button"
+            onClick={handleSubmit}
           >
             {isLoading ? (
               <>
