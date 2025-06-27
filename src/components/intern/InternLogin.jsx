@@ -17,7 +17,8 @@ const InternLogin = () => {
     confirmPassword: '',
     fullName: '',
   });
-const navigate=useNavigate();
+  const navigate = useNavigate();
+  
   const API_BASE_URL = 'http://localhost:8000/api';
 
   const passwordRequirements = {
@@ -49,8 +50,6 @@ const navigate=useNavigate();
     const score = Object.values(strength).filter(Boolean).length;
     return { strength, score, isStrong: score >= 4 };
   };
-
-
 
   const validateFullName = (name) => {
     const nameRegex = /^[A-Za-z\s\-']{2,50}$/;
@@ -158,8 +157,6 @@ const navigate=useNavigate();
         newErrors.fullName = 'Please enter a valid full name';
       }
       
-      
-      
       if (!formData.confirmPassword) {
         newErrors.confirmPassword = 'Please confirm your password';
       } else if (formData.password !== formData.confirmPassword) {
@@ -171,99 +168,105 @@ const navigate=useNavigate();
     return Object.keys(newErrors).length === 0;
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  console.log('Form submitted with data:', formData); // Debug log
-  
-  if (!validateForm()) {
-    console.log('Form validation failed:', errors); // Debug log
-    return;
-  }
-  
-  setIsLoading(true);
-  setSuccessMessage('');
-  setErrors({});
-  
-  try {
-    const endpoint = isSignUp ? '/auth/register' : '/auth/login';
-    const payload = isSignUp 
-      ? {
-          email: formData.email,
-          password: formData.password,
-          fullName: formData.fullName,
-        }
-      : {
-          email: formData.email,
-          password: formData.password
-        };
-
-    console.log('API URL:', `${API_BASE_URL}${endpoint}`); // Debug log
-    console.log('Payload:', payload); // Debug log
-
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
-    });
-
-    console.log('Response status:', response.status); // Debug log
-    console.log('Response headers:', response.headers); // Debug log
-
-    const data = await response.json();
-    console.log('Response data:', data); // Debug log
-
-    if (response.ok) {
-      // Success
-      if (isSignUp) {
-        setSuccessMessage(data.message || 'Account created successfully! Please check your email for verification.');
-        // Clear form
-        setFormData({
-          email: '',
-          password: '',
-          confirmPassword: '',
-          fullName: '',
-        });
-        navigate('/intern/dashboard')
-      } else {
-        // Login success - you might want to redirect or store token
-        setSuccessMessage(data.message || 'Login successful!');
-        // Store token if needed
-        if (data.token) {
-          localStorage.setItem('authToken', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
-        }
-        // Redirect or handle successful login
-        navigate('intern/dashboard')
-      }
-    } else {
-      // Handle different types of errors
-      if (data.details && Array.isArray(data.details)) {
-        // Validation errors from express-validator
-        const validationErrors = {};
-        data.details.forEach(detail => {
-          const field = detail.path || detail.param;
-          validationErrors[field] = detail.msg;
-        });
-        setErrors(validationErrors);
-      } else if (data.error) {
-        // General error message
-        setErrors({ submit: data.error });
-      } else {
-        // Fallback error message
-        setErrors({ submit: 'An error occurred. Please try again.' });
-      }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    console.log('Form submitted with data:', formData);
+    
+    if (!validateForm()) {
+      console.log('Form validation failed:', errors);
+      return;
     }
+    
+    setIsLoading(true);
+    setSuccessMessage('');
+    setErrors({});
+    
+    try {
+      const endpoint = isSignUp ? '/auth/register' : '/auth/login';
+      const payload = isSignUp 
+        ? {
+            email: formData.email,
+            password: formData.password,
+            fullName: formData.fullName,
+          }
+        : {
+            email: formData.email,
+            password: formData.password
+          };
 
-  } catch (error) {
-    console.error('Request failed:', error);
-    setErrors({ submit: 'Network error. Please check your connection and try again.' });
-  } finally {
-    setIsLoading(false);
-  }
-};
+      console.log('API URL:', `${API_BASE_URL}${endpoint}`);
+      console.log('Payload:', payload);
+
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      if (response.ok) {
+        // Success
+        if (isSignUp) {
+          setSuccessMessage(data.message || 'Account created successfully! Please check your email for verification.');
+          // Clear form
+          setFormData({
+            email: '',
+            password: '',
+            confirmPassword: '',
+            fullName: '',
+          });
+        } else {
+          // Login success
+          setSuccessMessage(data.message || 'Login successful!');
+          // Store token if needed
+          if (data.token) {
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+          }
+          // Redirect
+          navigate('/intern/dashboard');
+        }
+      } else {
+        // Handle different types of errors
+        if (data.details && Array.isArray(data.details)) {
+          // Validation errors from express-validator
+          const validationErrors = {};
+          data.details.forEach(detail => {
+            const field = detail.path || detail.param;
+            validationErrors[field] = detail.msg;
+          });
+          setErrors(validationErrors);
+        } else if (data.error) {
+          // Handle specific error cases
+          if (data.error === 'Please verify your email address before signing in') {
+            setErrors({ 
+              submit: data.error,
+              needsVerification: true // Flag to show resend button
+            });
+          } else {
+            setErrors({ submit: data.error });
+          }
+        } else {
+          // Fallback error message
+          setErrors({ submit: 'An error occurred. Please try again.' });
+        }
+      }
+
+    } catch (error) {
+      console.error('Request failed:', error);
+      setErrors({ submit: 'Network error. Please check your connection and try again.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleForgotPassword = async () => {
     if (!formData.email) {
@@ -297,6 +300,45 @@ const handleSubmit = async (e) => {
       }
     } catch (error) {
       console.error('Forgot password failed:', error);
+      setErrors({ submit: 'Network error. Please try again.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // NEW: Add the handleResendVerification function
+  const handleResendVerification = async () => {
+    if (!formData.email) {
+      setErrors({ email: 'Please enter your email address first' });
+      return;
+    }
+    
+    if (!validateEmail(formData.email)) {
+      setErrors({ email: 'Please enter a valid email address' });
+      return;
+    }
+    
+    setIsLoading(true);
+    setErrors({});
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: formData.email })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSuccessMessage(data.message || 'Verification email sent! Please check your inbox.');
+      } else {
+        setErrors({ submit: data.error || 'Failed to send verification email. Please try again.' });
+      }
+    } catch (error) {
+      console.error('Resend verification failed:', error);
       setErrors({ submit: 'Network error. Please try again.' });
     } finally {
       setIsLoading(false);
@@ -400,8 +442,6 @@ const handleSubmit = async (e) => {
                   </p>
                 )}
               </div>
-
-              
             </>
           )}
 
@@ -532,7 +572,6 @@ const handleSubmit = async (e) => {
             type="submit"
             disabled={isLoading}
             className="submit-button"
-            onClick={handleSubmit}
           >
             {isLoading ? (
               <>
@@ -554,6 +593,21 @@ const handleSubmit = async (e) => {
             >
               Forgot Password?
             </button>
+          )}
+
+          {/* Resend Verification Button - NEW */}
+          {!isSignUp && errors.needsVerification && (
+            <div className="verification-notice">
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={isLoading}
+                className="forgot-password-button"
+                style={{ marginTop: '8px' }}
+              >
+                Resend Verification Email
+              </button>
+            </div>
           )}
         </form>
 

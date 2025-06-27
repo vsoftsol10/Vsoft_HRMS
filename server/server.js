@@ -2322,7 +2322,7 @@ app.post('/api/auth/login', validateSignIn, async (req, res) => {
 
     // Get user from database
     const [users] = await pool.execute(
-      'SELECT id, employee_id, full_name, email, password_hash, is_verified FROM interns WHERE email = ?',
+      'SELECT id, full_name, email, password_hash, is_verified FROM interns WHERE email = ?',
       [email]
     );
 
@@ -2532,7 +2532,7 @@ app.get('/api/auth/verify-email', async (req, res) => {
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
   try {
     const [users] = await pool.execute(
-      'SELECT id, employee_id, full_name, email, created_at, last_login FROM interns WHERE id = ?',
+      'SELECT id, full_name, email, created_at, last_login FROM interns WHERE id = ?',
       [req.user.userId]
     );
 
@@ -2565,7 +2565,63 @@ app.use('*', (req, res) => {
 });
 
 
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-//   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-// });
+
+// Resend Verification Email Route
+app.post('/api/auth/resend-verification', [
+  body('email').isEmail().normalizeEmail()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Please provide a valid email address' });
+    }
+
+    const { email } = req.body;
+
+    // Check if user exists and is not verified
+    const [users] = await pool.execute(
+      'SELECT id, full_name, is_verified FROM interns WHERE email = ?',
+      [email]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = users[0];
+
+    if (user.is_verified) {
+      return res.status(400).json({ error: 'Account is already verified' });
+    }
+
+    // Generate new verification token
+    const verificationToken = generateToken();
+
+    // Update verification token
+    await pool.execute(
+      'UPDATE interns SET verification_token = ? WHERE id = ?',
+      [verificationToken, user.id]
+    );
+
+    // Send verification email
+    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+    await sendEmail(
+      email,
+      'Verify Your Intern Portal Account',
+      `
+        <h2>Email Verification</h2>
+        <p>Hi ${user.full_name},</p>
+        <p>Please click the link below to verify your email address:</p>
+        <a href="${verificationLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+        <p>If the button doesn't work, copy and paste this link: ${verificationLink}</p>
+        <p>If you didn't create this account, please ignore this email.</p>
+      `
+    );
+
+    res.json({ message: 'Verification email sent successfully!' });
+
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});

@@ -16,6 +16,7 @@ import MyProfile from './components/employee/MyProfile'
 import AttendanceCalendar from './components/attendance/AttendanceCalendar'
 import CourseDashboard from './components/dashboard/CourseDashboard'
 import InternLogin from './components/intern/InternLogin'
+import InternEmailVerification from './components/intern/InternEmailVerification'
 
 
 
@@ -35,6 +36,7 @@ const employeeCode = 'VSEMP03';
       <Route path='/payslip/:id' element={<PayrollPage/>} />
       <Route path='/payrollAdmin' element={<PayrollAdmin/>} />
 
+      <Route path='/email/verification' element={<InternEmailVerification/>} />
       <Route path='/intern/login' element={<InternLogin/>} />
       <Route path='/intern/dashboard' element={<InternDashboardPage/>} />
       <Route path='/learn/course' element={<CourseDashboard/>} />
