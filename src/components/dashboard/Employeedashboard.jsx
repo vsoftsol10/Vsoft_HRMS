@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import "./EmployeeDashboard.css"
+import "./EmployeeDashboard1.css"
 import { useNavigate } from 'react-router-dom';
 
 const EmployeeDashboard = () => {
