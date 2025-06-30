@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import "./EmployeeDashboard1.css"
+import "./EmployeeDashboardcss.css"
 import { useNavigate } from 'react-router-dom';
 
-const EmployeeDashboard = () => {
+const EmployeeDashboard1 = () => {
   const [employeeInfo, setEmployeeInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -237,4 +237,4 @@ const EmployeeDashboard = () => {
   );
 };
 
-export default EmployeeDashboard;
+export default EmployeeDashboard1;
