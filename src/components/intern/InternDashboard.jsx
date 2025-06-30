@@ -16,6 +16,7 @@ import {
   Upload,
   MessageCircle
 } from 'lucide-react';
+import './InternDashboard.css';
 
 const InternDashboard = () => {
   const [activeNav, setActiveNav] = useState('dashboard');
@@ -56,11 +57,11 @@ const InternDashboard = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Pending': return 'bg-gray-500';
-      case 'In Progress': return 'bg-purple-600';
-      case 'Completed': return 'bg-green-500';
-      case 'Approved': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'Pending': return 'intern-dash-status-pending';
+      case 'In Progress': return 'intern-dash-status-in-progress';
+      case 'Completed': return 'intern-dash-status-completed';
+      case 'Approved': return 'intern-dash-status-approved';
+      default: return 'intern-dash-status-pending';
     }
   };
 
@@ -75,22 +76,20 @@ const InternDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="intern-dash-container">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg">
-        <div className="p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Intern Portal</h2>
+      <div className="intern-dash-sidebar">
+        <div className="intern-dash-sidebar-header">
+          <h2 className="intern-dash-sidebar-title">Intern Portal</h2>
         </div>
-        <nav className="mt-6">
+        <nav className="intern-dash-sidebar-nav">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveNav(item.id)}
-              className={`w-full flex items-center px-6 py-3 text-left hover:bg-gray-50 transition-colors ${
-                activeNav === item.id ? 'bg-purple-50 border-r-3 border-purple-600 text-purple-600' : 'text-gray-600'
-              }`}
+              className={`intern-dash-nav-item ${activeNav === item.id ? 'intern-dash-nav-item-active' : ''}`}
             >
-              <item.icon className="w-5 h-5 mr-3" />
+              <item.icon className="intern-dash-nav-icon" />
               {item.label}
             </button>
           ))}
@@ -98,102 +97,102 @@ const InternDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="intern-dash-main-content">
         {/* Welcome Banner */}
-        <div className="bg-purple-700 text-white p-8">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-2xl font-bold">
+        <div className="intern-dash-welcome-banner">
+          <div className="intern-dash-welcome-content">
+            <div className="intern-dash-profile-avatar">
               {internData.profilePhoto ? (
-                <img src={internData.profilePhoto} alt="Profile" className="w-full h-full rounded-full" />
+                <img src={internData.profilePhoto} alt="Profile" className="intern-dash-profile-image" />
               ) : (
                 internData.name.split(' ').map(n => n[0]).join('')
               )}
             </div>
-            <div>
-              <h1 className="text-3xl font-bold">Welcome, {internData.name}!</h1>
-              <p className="text-purple-200 mt-1">Your training ends on: {internData.trainingEndDate}</p>
+            <div className="intern-dash-welcome-text">
+              <h1 className="intern-dash-welcome-title">Welcome, {internData.name}!</h1>
+              <p className="intern-dash-welcome-subtitle">Your training ends on: {internData.trainingEndDate}</p>
             </div>
           </div>
         </div>
 
-        <div className="p-8">
+        <div className="intern-dash-content-wrapper">
           {/* Quick Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-purple-700 text-white p-6 rounded-lg shadow-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Tasks Completed</h3>
-                  <p className="text-2xl font-bold mt-2">{internData.tasksCompleted} of {internData.totalTasks}</p>
+          <div className="intern-dash-stats-grid">
+            <div className="intern-dash-stat-card intern-dash-stat-card-primary">
+              <div className="intern-dash-stat-content">
+                <div className="intern-dash-stat-info">
+                  <h3 className="intern-dash-stat-title">Tasks Completed</h3>
+                  <p className="intern-dash-stat-value">{internData.tasksCompleted} of {internData.totalTasks}</p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-purple-200" />
+                <CheckCircle className="intern-dash-stat-icon" />
               </div>
             </div>
 
-            <div className="bg-purple-500 text-white p-6 rounded-lg shadow-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Days Remaining</h3>
-                  <p className="text-2xl font-bold mt-2">{internData.daysRemaining} Days Left</p>
+            <div className="intern-dash-stat-card intern-dash-stat-card-secondary">
+              <div className="intern-dash-stat-content">
+                <div className="intern-dash-stat-info">
+                  <h3 className="intern-dash-stat-title">Days Remaining</h3>
+                  <p className="intern-dash-stat-value">{internData.daysRemaining} Days Left</p>
                 </div>
-                <Calendar className="w-8 h-8 text-purple-200" />
+                <Calendar className="intern-dash-stat-icon" />
               </div>
             </div>
 
-            <div className="bg-purple-600 text-white p-6 rounded-lg shadow-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Upcoming Deadline</h3>
-                  <p className="text-sm font-bold mt-2">{internData.upcomingDeadline}</p>
+            <div className="intern-dash-stat-card intern-dash-stat-card-tertiary">
+              <div className="intern-dash-stat-content">
+                <div className="intern-dash-stat-info">
+                  <h3 className="intern-dash-stat-title">Upcoming Deadline</h3>
+                  <p className="intern-dash-stat-value-small">{internData.upcomingDeadline}</p>
                 </div>
-                <Clock className="w-8 h-8 text-purple-200" />
+                <Clock className="intern-dash-stat-icon" />
               </div>
             </div>
 
-            <div className="bg-gray-500 text-white p-6 rounded-lg shadow-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Certificate Progress</h3>
-                  <p className="text-2xl font-bold mt-2">{internData.certificateProgress}% Complete</p>
+            <div className="intern-dash-stat-card intern-dash-stat-card-neutral">
+              <div className="intern-dash-stat-content">
+                <div className="intern-dash-stat-info">
+                  <h3 className="intern-dash-stat-title">Certificate Progress</h3>
+                  <p className="intern-dash-stat-value">{internData.certificateProgress}% Complete</p>
                 </div>
-                <Award className="w-8 h-8 text-gray-200" />
+                <Award className="intern-dash-stat-icon" />
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="intern-dash-main-grid">
             {/* Task Status Table */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Task Status</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+            <div className="intern-dash-task-section">
+              <div className="intern-dash-card">
+                <h2 className="intern-dash-section-title">Task Status</h2>
+                <div className="intern-dash-table-wrapper">
+                  <table className="intern-dash-task-table">
                     <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-2">Task Title</th>
-                        <th className="text-left py-2">Assigned Date</th>
-                        <th className="text-left py-2">Due Date</th>
-                        <th className="text-left py-2">Status</th>
-                        <th className="text-left py-2">Action</th>
+                      <tr className="intern-dash-table-header">
+                        <th className="intern-dash-table-cell">Task Title</th>
+                        <th className="intern-dash-table-cell">Assigned Date</th>
+                        <th className="intern-dash-table-cell">Due Date</th>
+                        <th className="intern-dash-table-cell">Status</th>
+                        <th className="intern-dash-table-cell">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {tasks.map((task) => (
-                        <tr key={task.id} className="border-b hover:bg-gray-50">
-                          <td className="py-3">{task.title}</td>
-                          <td className="py-3">{task.assignedDate}</td>
-                          <td className="py-3">{task.dueDate}</td>
-                          <td className="py-3">
-                            <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(task.status)}`}>
+                        <tr key={task.id} className="intern-dash-table-row">
+                          <td className="intern-dash-table-cell">{task.title}</td>
+                          <td className="intern-dash-table-cell">{task.assignedDate}</td>
+                          <td className="intern-dash-table-cell">{task.dueDate}</td>
+                          <td className="intern-dash-table-cell">
+                            <span className={`intern-dash-status-badge ${getStatusColor(task.status)}`}>
                               {task.status}
                             </span>
                           </td>
-                          <td className="py-3">
-                            <div className="flex space-x-2">
-                              <button className="text-blue-600 hover:text-blue-800">
-                                <Eye className="w-4 h-4" />
+                          <td className="intern-dash-table-cell">
+                            <div className="intern-dash-action-buttons">
+                              <button className="intern-dash-action-btn intern-dash-action-btn-view">
+                                <Eye className="intern-dash-action-icon" />
                               </button>
-                              <button className="text-green-600 hover:text-green-800">
-                                <Upload className="w-4 h-4" />
+                              <button className="intern-dash-action-btn intern-dash-action-btn-upload">
+                                <Upload className="intern-dash-action-icon" />
                               </button>
                             </div>
                           </td>
@@ -206,88 +205,86 @@ const InternDashboard = () => {
             </div>
 
             {/* Right Column */}
-            <div className="space-y-6">
+            <div className="intern-dash-sidebar-content">
               {/* Announcements */}
-              <div className="bg-purple-500 text-white rounded-lg shadow-lg p-6">
-                <h2 className="text-lg font-bold mb-4">📢 Announcements</h2>
-                <div className="space-y-3">
+              <div className="intern-dash-announcements-card">
+                <h2 className="intern-dash-card-title">📢 Announcements</h2>
+                <div className="intern-dash-announcements-list">
                   {announcements.map((announcement, index) => (
-                    <div key={index} className="bg-purple-400 bg-opacity-50 p-3 rounded">
-                      <p className="text-sm">{announcement}</p>
+                    <div key={index} className="intern-dash-announcement-item">
+                      <p className="intern-dash-announcement-text">{announcement}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Certificate Section */}
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-lg font-bold text-gray-800 mb-4">🎓 Certificate</h2>
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Progress</span>
-                    <span>{internData.certificateProgress}%</span>
+              <div className="intern-dash-card">
+                <h2 className="intern-dash-card-title">🎓 Certificate</h2>
+                <div className="intern-dash-certificate-content">
+                  <div className="intern-dash-progress-info">
+                    <span className="intern-dash-progress-label">Progress</span>
+                    <span className="intern-dash-progress-percentage">{internData.certificateProgress}%</span>
                   </div>
-                  <div className="w-full bg-gray-300 rounded-full h-2">
+                  <div className="intern-dash-progress-bar">
                     <div 
-                      className="bg-purple-700 h-2 rounded-full transition-all duration-300"
+                      className="intern-dash-progress-fill"
                       style={{ width: `${internData.certificateProgress}%` }}
                     ></div>
                   </div>
                 </div>
                 <button 
-                  className={`w-full flex items-center justify-center space-x-2 py-2 px-4 rounded ${
-                    internData.certificateProgress === 100 
-                      ? 'bg-purple-700 text-white hover:bg-purple-800' 
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
+                  className={`intern-dash-certificate-btn ${internData.certificateProgress === 100 ? 'intern-dash-certificate-btn-active' : 'intern-dash-certificate-btn-disabled'}`}
                   disabled={internData.certificateProgress !== 100}
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="intern-dash-btn-icon" />
                   <span>Download Certificate</span>
                 </button>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="intern-dash-certificate-note">
                   Complete all tasks to unlock your certificate
                 </p>
               </div>
 
               {/* Help & Support */}
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-lg font-bold text-gray-800 mb-4">💬 Help & Support</h2>
-                <div className="space-y-3">
-                  <a href="mailto:intern.support@yourcompany.com" className="block text-purple-600 hover:text-purple-800">
-                    📧 intern.support@yourcompany.com
+              <div className="intern-dash-card">
+                <h2 className="intern-dash-card-title">💬 Help & Support</h2>
+                <div className="intern-dash-help-links">
+                  <a href="mailto:info@thevsoft.com" className="intern-dash-help-link">
+                    📧 info@thevsoft.com
                   </a>
-                  <button className="block text-purple-600 hover:text-purple-800">
+                  {/* <button className="intern-dash-help-link intern-dash-help-button">
                     📚 FAQ / Help Docs
                   </button>
-                  <button className="flex items-center space-x-2 text-purple-600 hover:text-purple-800">
-                    <MessageCircle className="w-4 h-4" />
+                  <button className="intern-dash-help-link intern-dash-help-button intern-dash-chat-button">
+                    <MessageCircle className="intern-dash-help-icon" />
                     <span>Live Chat</span>
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Training Progress Timeline */}
-          <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">🛣️ Training Progress Timeline</h2>
-            <div className="flex flex-wrap justify-between items-center">
-              {timelineSteps.map((step, index) => (
-                <div key={index} className="flex flex-col items-center mb-4">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold mb-2 ${
-                    step.status === 'completed' ? 'bg-purple-700' : 
-                    step.status === 'current' ? 'bg-purple-500' : 'bg-gray-400'
-                  }`}>
-                    {index + 1}
+          <div className="intern-dash-timeline-section">
+            <div className="intern-dash-card">
+              <h2 className="intern-dash-section-title">🛣️ Training Progress Timeline</h2>
+              <div className="intern-dash-timeline-container">
+                {timelineSteps.map((step, index) => (
+                  <div key={index} className="intern-dash-timeline-step">
+                    <div className={`intern-dash-timeline-circle ${
+                      step.status === 'completed' ? 'intern-dash-timeline-completed' : 
+                      step.status === 'current' ? 'intern-dash-timeline-current' : 'intern-dash-timeline-upcoming'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <h3 className="intern-dash-timeline-title">{step.title}</h3>
+                    <p className="intern-dash-timeline-date">{step.date}</p>
+                    {index < timelineSteps.length - 1 && (
+                      <div className="intern-dash-timeline-connector"></div>
+                    )}
                   </div>
-                  <h3 className="font-semibold text-sm text-center">{step.title}</h3>
-                  <p className="text-xs text-gray-500 text-center">{step.date}</p>
-                  {index < timelineSteps.length - 1 && (
-                    <div className="hidden lg:block w-20 h-0.5 bg-gray-300 mt-6 absolute" style={{left: `${(index + 1) * 20}%`}}></div>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
