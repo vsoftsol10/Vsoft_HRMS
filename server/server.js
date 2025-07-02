@@ -34,6 +34,7 @@ app.use((req, res, next) => {
   req.db = pool;
   next();
 });
+
 // Test database connection
 async function testConnection() {
   try {
