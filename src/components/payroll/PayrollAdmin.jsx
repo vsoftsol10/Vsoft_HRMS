@@ -9,7 +9,7 @@ const PayrollAdmin = () => {
  
   const fetchPayrollList = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/payroll');
+      const res = await fetch('https://vsofthrms-production.up.railway.app/api/payroll');
       const data = await res.json();
       setPayrolls(data);
     } catch (err) {
@@ -129,8 +129,8 @@ const PayrollAdmin = () => {
     e.preventDefault();
 
     const url = editingPayroll
-      ? `http://localhost:8000/api/payroll/${editingPayroll.id}`
-      : 'http://localhost:8000/api/payroll';
+      ? `https://vsofthrms-production.up.railway.app/api/payroll/${editingPayroll.id}`
+      : 'https://vsofthrms-production.up.railway.app/api/payroll';
 
     const method = editingPayroll ? 'PUT' : 'POST';
 
@@ -180,7 +180,7 @@ const PayrollAdmin = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this payroll?')) {
       try {
-        const res = await fetch(`http://localhost:8000/api/payroll/${id}`, {
+        const res = await fetch(`https://vsofthrms-production.up.railway.app/api/payroll/${id}`, {
           method: 'DELETE'
         });
 

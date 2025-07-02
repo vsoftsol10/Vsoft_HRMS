@@ -52,7 +52,7 @@ const EmployeeProfile = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/employees');
+      const response = await fetch('https://vsofthrms-production.up.railway.app/api/employees');
       const data = await response.json();
       setEmployees(data);
     } catch (error) {
@@ -65,9 +65,9 @@ const EmployeeProfile = () => {
   const fetchDropdownData = async () => {
     try {
       const [deptRes, posRes, manRes] = await Promise.all([
-        fetch('http://localhost:8000/api/departments'),
-        fetch('http://localhost:8000/api/positions'),
-        fetch('http://localhost:8000/api/managers')
+        fetch('https://vsofthrms-production.up.railway.app/api/departments'),
+        fetch('https://vsofthrms-production.up.railway.app/api/positions'),
+        fetch('https://vsofthrms-production.up.railway.app/api/managers')
       ]);
       
       const [deptData, posData, manData] = await Promise.all([
@@ -177,8 +177,8 @@ const EmployeeProfile = () => {
     
     try {
       const url = isEditing 
-        ? `http://localhost:8000/api/employees/${currentEmployee.id}`
-        : 'http://localhost:8000/api/employees';
+        ? `https://vsofthrms-production.up.railway.app/api/employees/${currentEmployee.id}`
+        : 'https://vsofthrms-production.up.railway.app/api/employees';
       
       const method = isEditing ? 'PUT' : 'POST';
       
@@ -208,7 +208,7 @@ const EmployeeProfile = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        const response = await fetch(`http://localhost:8000/api/employees/${id}`, {
+        const response = await fetch(`https://vsofthrms-production.up.railway.app/api/employees/${id}`, {
           method: 'DELETE',
         });
 
