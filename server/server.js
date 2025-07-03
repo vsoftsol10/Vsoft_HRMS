@@ -9,7 +9,7 @@ const nodemailer = require('nodemailer');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const { body, validationResult } = require('express-validator');
-const PORT = process.env.PORT ||5000;
+const PORT = process.env.PORT || 8080;
 
 const app = express();
 
