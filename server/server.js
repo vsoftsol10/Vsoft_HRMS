@@ -43,9 +43,13 @@ const dbConfig = {
 // Create MySQL connection pool
 const pool = mysql.createPool(dbConfig);
 
-app.use((req, res, next) => {
+app.use((err,req, res, next) => {
   req.db = pool;
   next();
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({ success: false, message: "CORS Error: This origin is not allowed." });
+  }
+  next(err);
 });
 
 // Test database connection
