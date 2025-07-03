@@ -12,23 +12,15 @@ const { body, validationResult } = require('express-validator');
 const PORT = process.env.PORT ||5000;
 
 const app = express();
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://vsofthrms-udp6.vercel.app",
-  "https://vsofthrms-udp6-h3ka3g250-vsoftcrackers-projects.vercel.app"
-];
+
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true
+  origin: [
+    'http://localhost:5173', // for local development
+    'https://vsofthrms-udp6.vercel.app' // for production
+  ],
+  credentials: true // if you're using cookies/authentication
 }));
-
 app.use(express.json());
 
 // MySQL Database Configuration
