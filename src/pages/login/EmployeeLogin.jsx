@@ -11,6 +11,9 @@ const EmployeeLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Define API base URL - update this to match your actual server
+  const API_BASE_URL = 'http://localhost:8000';
+
   const handleLogin = async (e) => {
     e.preventDefault();
     
@@ -23,8 +26,8 @@ const EmployeeLogin = () => {
     setLoginError('');
 
     try {
-      // Call your backend API to authenticate the employee
-      const response = await fetch('https://vsofthrms-production.up.railway.app/api/authenticate', {
+      // Updated API endpoint URL
+      const response = await fetch(`${API_BASE_URL}/api/authenticate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -39,6 +42,7 @@ const EmployeeLogin = () => {
 
       if (response.ok && data.success) {
         // Login successful - store employee data and redirect
+        // Note: In production, consider using more secure storage methods
         localStorage.setItem('employeeInfo', JSON.stringify(data.employee));
         localStorage.setItem('isLoggedIn', 'true');
         
@@ -50,7 +54,7 @@ const EmployeeLogin = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      setLoginError('Connection error. Please try again.');
+      setLoginError('Connection error. Please check your internet connection and try again.');
     } finally {
       setIsLoading(false);
     }
