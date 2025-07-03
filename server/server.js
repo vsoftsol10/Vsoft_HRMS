@@ -376,10 +376,15 @@ app.post('/api/authenticate', async (req, res) => {
     }
     
     // Query to find employee by employee_id (employee code)
-    const [rows] = await pool.execute(
-      'SELECT * FROM payrolls WHERE employee_id = ? LIMIT 1', 
-      [employeeCode]
-    );
+   console.log("Authenticating:", employeeCode, password);
+
+const [rows] = await pool.execute(
+  'SELECT * FROM payrolls WHERE employee_id = ? LIMIT 1',
+  [employeeCode]
+);
+
+console.log("Query result:", rows);
+
     
     if (rows.length === 0) {
       return res.status(401).json({ 
@@ -429,12 +434,13 @@ app.post('/api/authenticate', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Authentication error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error during authentication' 
-    });
-  }
+  console.error("❌ Full error stack:", error);
+  res.status(500).json({
+    success: false,
+    message: 'Server error during authentication'
+  });
+}
+
 });
 
 // Optional: Add endpoint to get employee dashboard data
