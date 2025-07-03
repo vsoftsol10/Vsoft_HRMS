@@ -12,7 +12,7 @@ const EmployeeLogin = () => {
   const navigate = useNavigate();
 
   // Define API base URL - update this to match your actual server
-  const API_BASE_URL = 'http://localhost:8000';
+  const API_BASE_URL = 'https://vsofthrms-production.up.railway.app/';
 
   const handleLogin = async (e) => {
     e.preventDefault();
