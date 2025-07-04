@@ -11,8 +11,8 @@ const EmployeeLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Define API base URL - update this to match your actual server
-  const API_BASE_URL = 'https://vsofthrms-production.up.railway.app/';
+  // Use environment variable or fallback to Railway URL
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://vsofthrms-production.up.railway.app';
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -26,8 +26,11 @@ const EmployeeLogin = () => {
     setLoginError('');
 
     try {
-      // Updated API endpoint URL
-      const response = await fetch(`${API_BASE_URL}/api/authenticate`, {
+      // Remove trailing slash and ensure proper URL formation
+      const apiUrl = `${API_BASE_URL.replace(/\/$/, '')}/api/authenticate`;
+      console.log('Making request to:', apiUrl); // Debug log
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,6 +57,7 @@ const EmployeeLogin = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
+      console.error('API URL used:', `${API_BASE_URL.replace(/\/$/, '')}/api/authenticate`);
       setLoginError('Connection error. Please check your internet connection and try again.');
     } finally {
       setIsLoading(false);
